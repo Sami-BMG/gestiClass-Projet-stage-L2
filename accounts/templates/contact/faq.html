@@ -1,0 +1,91 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-question-circle me-2"></i>Foire Aux Questions</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li>FAQ</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            {% for category, faqs in faqs_by_category.items %}
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0">{{ faqs.0.get_category_display }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="accordion{{ forloop.counter }}">
+                        {% for faq in faqs %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ faq.id }}">
+                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" 
+                                        type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ faq.id }}" 
+                                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
+                                        aria-controls="collapse{{ faq.id }}">
+                                    {{ faq.question }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ faq.id }}" 
+                                 class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                                 aria-labelledby="heading{{ faq.id }}" 
+                                 data-bs-parent="#accordion{{ forloop.counter }}">
+                                <div class="accordion-body">
+                                    {{ faq.answer|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                    <h5>Aucune FAQ disponible pour le moment</h5>
+                    <p class="text-muted">Revenez plus tard ou contactez-nous directement.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="m-0"><i class="fas fa-lightbulb me-2"></i>Vous ne trouvez pas réponse ?</h5>
+                </div>
+                <div class="card-body">
+                    <p>Si vous ne trouvez pas la réponse à votre question dans la FAQ, n'hésitez pas à nous contacter directement.</p>
+                    <div class="d-grid">
+                        <a href="{% url 'accounts:contact' %}" class="btn btn-primary">
+                            <i class="fas fa-envelope me-1"></i> Nous contacter
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="m-0"><i class="fas fa-school me-2"></i>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <p>Besoin d'informations générales sur l'école ?</p>
+                    <div class="d-grid">
+                        <a href="{% url 'accounts:school_info' %}" class="btn btn-outline-success">
+                            <i class="fas fa-info-circle me-1"></i> Infos de l'école
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

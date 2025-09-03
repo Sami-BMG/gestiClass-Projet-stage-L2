@@ -1,0 +1,218 @@
+<!--<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emploi du temps</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        }
+        .schedule-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            padding: 20px;
+        }
+        .schedule-header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .day-header {
+            background-color: #6a11cb;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .time-slot {
+            font-weight: bold;
+            background-color: #e9ecef;
+            padding: 5px;
+            border-radius: 3px;
+            margin-bottom: 5px;
+        }
+        .schedule-item {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6a11cb;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+        .delegate-card {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .stats-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .week-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .badge-custom {
+            background-color: #6a11cb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+         Chargement des filtres personnalisés 
+    {% load custom_filters %}
+    
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calendar-alt me-2"></i>Emploi du Temps
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    Connecté en tant que: <strong>{{ user.get_full_name|default:user.username }}</strong>
+                    ({{ user|get_profil_display }})
+                </span>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'admin:logout' %}">
+                    <i class="fas fa-sign-out-alt me-1"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        <div class="schedule-container">
+            <div class="schedule-header text-center">
+                <h1><i class="fas fa-calendar-week me-2"></i>Mon Emploi du Temps</h1>
+                <p class="mb-0">Semaine {{ current_week }}</p>
+            </div>
+
+            <div class="week-navigation">
+                <button class="btn btn-outline-primary me-2"><i class="fas fa-chevron-left"></i> Semaine précédente</button>
+                <span class="mx-3">Semaine actuelle</span>
+                <button class="btn btn-outline-primary ms-2">Semaine suivante <i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 10%">Créneaux</th>
+                            {% for day in days %}
+                            <th scope="col" class="day-header">{{ day|day_french }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in time_slots %}
+                        <tr>
+                            <td class="time-slot">{{ slot|replace:"8-10,8h-10h"|replace:"10-12,10h-12h"|replace:"14-16,14h-16h"|replace:"16-18,16h-18h" }}</td>
+                            {% for day in days %}
+                            <td>
+                                {% with day_schedule=schedule|get_item:day %}
+                                {% with slot_schedule=day_schedule|get_item:slot %}
+                                    {% for item in slot_schedule %}
+                                    <div class="schedule-item">
+                                        <h6 class="mb-1">{{ item.subject.name }}</h6>
+                                        <p class="mb-1 small">{{ item.classroom }}</p>
+                                        <p class="mb-0 small">
+                                            <span class="badge bg-primary rounded-pill">{{ item.subject.teacher.get_full_name }}</span>
+                                        </p>
+                                    </div>
+                                    {% empty %}
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-times"></i> Aucun cours
+                                    </div>
+                                    {% endfor %}
+                                {% endwith %}
+                                {% endwith %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if user_class and delegate %}
+            <div class="delegate-card">
+                <h4><i class="fas fa-user-graduate me-2"></i>Délégué de classe</h4>
+                <div class="d-flex align-items-center mt-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-user-circle fa-3x"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-0">{{ delegate.get_full_name }}</h5>
+                        <p class="mb-1">Email: {{ delegate.email }}</p>
+                        <p class="mb-0">Téléphone: {{ delegate.phone|default:"Non renseigné" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="stats-card">
+                        <h4><i class="fas fa-chart-pie me-2"></i>Statistiques de la semaine</h4>
+                        <ul class="list-group list-group-flush mt-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Total d'heures de cours
+                                <span class="badge bg-primary rounded-pill">24h</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Cours accomplis
+                                <span class="badge bg-success rounded-pill">18h</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Cours à venir
+                                <span class="badge bg-info rounded-pill">6h</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stats-card">
+                        <h4><i class="fas fa-info-circle me-2"></i>Informations</h4>
+                        <div class="mt-3">
+                            <p><i class="fas fa-users me-2"></i> <strong>Classe:</strong> {{ user_class.name|default:"Non assigné" }}</p>
+                            <p><i class="fas fa-book me-2"></i> <strong>Matières cette semaine:</strong> 8</p>
+                            <p><i class="fas fa-chalkboard-teacher me-2"></i> <strong>Enseignants:</strong> 5</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if user.profil == 'admin' %}
+            <div class="text-center mt-4">
+                <a href="/admin/schedule/schedule/" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i> Modifier l'emploi du temps
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">Système de gestion d'emploi du temps © 2023 - Tous droits réservés</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>-->

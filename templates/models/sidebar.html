@@ -1,0 +1,38 @@
+<div class="sidebar" id="sidebar">
+    
+    <div class="sidebar-header">
+        <h3><i class="fas fa-graduation-cap text-primary"></i> GestiClass</h3>
+    </div>
+    <div class="sidebar-menu">
+        <ul>
+            <li><a href="{% url 'dashboard:home' %}" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="{% url 'accounts:students_list' %}"><i class="fas fa-user-graduate"></i> Étudiants</a></li>
+            <li><a href="{% url 'accounts:teachers_list' %}"><i class="fas fa-chalkboard-teacher"></i> Enseignants</a></li>
+            <li><a href="{% url 'accounts:modules_list' %}"><i class="fas fa-book"></i> Modules</a></li>
+            <li><a href="{% url 'accounts:results_list' %}"><i class="fas fa-chart-bar"></i> Résulats</a></li>
+            <li><a href="{% url 'accounts:contact' %}"><i class="fas fa-address-book"></i> Contacts</a></li>
+        </ul>
+    </div>  
+
+    <div class="user-profile">
+        <img src="https://ui-avatars.com/api/?name=Admin+User&background=random" alt="User">
+        <div class="user-info">
+            <h4>{{ user }}</h4>
+            <p>
+                {% if user.profil == 'student' %}
+                    Eleve
+                {% elif user.profil == 'teacher' %}
+                    Professeur
+                {% elif user.profil == 'admin' %}
+                    Admin
+                {% endif %}
+                <div>
+                    <a  href="{% url 'accounts:logout' %}"> 
+                        <i class="fas fa-sign-out-alt" ></i> 
+                        <span>Se deconnecter</span>  
+                    </a>  
+                </div>
+            </p> 
+        </div>
+    </div>
+</div>

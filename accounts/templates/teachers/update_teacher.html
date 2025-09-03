@@ -1,0 +1,189 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-user-edit me-2"></i>Modifier l'Enseignant</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li>Enseignants</li>
+                <li>Modifier</li>
+            </ul>
+        </div>
+        <a href="{% url 'accounts:teachers_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="m-0"><i class="fas fa-user-edit me-2"></i>Modifier les informations de {{ teacher.get_full_name }}</h5>
+        </div>
+        <div class="card-body">
+            <!-- Messages d'alerte -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Photo de profil -->
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                {% if teacher.photo %}
+                                    <img src="{{ teacher.photo.url }}" class="img-fluid rounded-circle mb-3" 
+                                         alt="Photo de profil" style="width: 150px; height: 150px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{% static 'img/default-avatar.png' %}" class="img-fluid rounded-circle mb-3" 
+                                         alt="Photo de profil" style="width: 150px; height: 150px; object-fit: cover;">
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="photo" class="form-label">Changer la photo</label>
+                                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                                </div>
+                                
+                                {% if teacher.photo %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="remove_photo" name="remove_photo">
+                                        <label class="form-check-label" for="remove_photo">
+                                            Supprimer la photo
+                                        </label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations personnelles -->
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="m-0">Informations Personnelles</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="first_name" class="form-label">Prénom <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" 
+                                               value="{{ teacher.first_name }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="last_name" class="form-label">Nom <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" 
+                                               value="{{ teacher.last_name }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               value="{{ teacher.email }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Téléphone</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                               value="{{ teacher.phone }}">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="speciality" class="form-label">Spécialité</label>
+                                        <input type="text" class="form-control" id="speciality" name="speciality" 
+                                               value="{{ teacher.speciality }}" placeholder="Ex: Mathématiques, Physique, etc.">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="birth_date" class="form-label">Date de naissance</label>
+                                        <input type="date" class="form-control" id="birth_date" name="birth_date" 
+                                               value="{{ teacher.birth_date|date:'Y-m-d' }}">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="username" class="form-label">Nom d'utilisateur</label>
+                                        <input type="text" class="form-control" id="username" value="{{ teacher.username }}" readonly>
+                                        <div class="form-text">Le nom d'utilisateur ne peut pas être modifié</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Adresse</label>
+                                    <textarea class="form-control" id="address" name="address" rows="3">{{ teacher.address }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'accounts:teachers_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i> Enregistrer les modifications
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fonction pour prévisualiser l'image avant upload
+document.getElementById('photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector('.rounded-circle').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Confirmation avant suppression de la photo
+const removePhotoCheckbox = document.getElementById('remove_photo');
+if (removePhotoCheckbox) {
+    removePhotoCheckbox.addEventListener('change', function(e) {
+        if (this.checked) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer la photo de profil ?')) {
+                this.checked = false;
+            } else {
+                document.querySelector('.rounded-circle').src = "{% static 'img/default-avatar.png' %}";
+            }
+        }
+    });
+}
+
+// Validation du formulaire
+document.querySelector('form').addEventListener('submit', function(e) {
+    const email = document.getElementById('email').value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Veuillez entrer une adresse email valide.');
+        return false;
+    }
+});
+</script>
+{% endblock %}

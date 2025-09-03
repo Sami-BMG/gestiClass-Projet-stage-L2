@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Accueil - GestiClass{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <div class="card shadow">
+            <div class="card-body">
+                <h1 class="display-4 mb-4">
+                    <i class="fas fa-graduation-cap text-primary"></i> GestiClass
+                </h1>
+                <p class="lead">Système de gestion de classe</p>
+                
+                <div class="row mt-5">
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3><i class="fas fa-sign-in-alt"></i> Connexion</h3>
+                                <p>Espace utilisateurs</p>
+                                <a href="/accounts/login/" class="btn btn-success">Se connecter</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

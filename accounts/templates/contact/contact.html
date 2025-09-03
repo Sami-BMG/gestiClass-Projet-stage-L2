@@ -1,0 +1,113 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-envelope me-2"></i>Contactez-nous</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li>Contact</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0"><i class="fas fa-paper-plane me-2"></i>Envoyer un message</h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Nom complet *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{% if user.is_authenticated %}{{ user.get_full_name }}{% endif %}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="message_type" class="form-label">Type de message *</label>
+                                <select class="form-select" id="message_type" name="message_type" required>
+                                    <option value="">Sélectionnez un type</option>
+                                    <option value="suggestion">Suggestion</option>
+                                    <option value="problem">Problème</option>
+                                    <option value="question">Question</option>
+                                    <option value="other">Autre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="subject" class="form-label">Sujet *</label>
+                                <input type="text" class="form-control" id="subject" name="subject" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message *</label>
+                            <textarea class="form-control" id="message" name="message" rows="6" 
+                                      placeholder="Décrivez votre suggestion, problème ou question en détail..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i> Envoyer le message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="m-0"><i class="fas fa-info-circle me-2"></i>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <p>Nous sommes là pour vous aider ! Utilisez ce formulaire pour :</p>
+                    <ul>
+                        <li>Faire des suggestions d'amélioration</li>
+                        <li>Signaler des problèmes techniques</li>
+                        <li>Poser des questions sur le système</li>
+                        <li>Donner votre feedback</li>
+                    </ul>
+                    <p class="mb-0">Nous répondons généralement dans les 24-48 heures.</p>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="m-0"><i class="fas fa-link me-2"></i>Liens utiles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:faq_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-question-circle me-1"></i> FAQ
+                        </a>
+                        <a href="{% url 'accounts:school_info' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-school me-1"></i> Informations de l'école
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+<div class="header">
+    <div class="toggle-sidebar" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
+    <div class="header-right">
+        <div class="notification">
+            <i class="fas fa-bell"></i>
+            <span class="badge">3</span>
+        </div>
+        <div>
+            {% if user.is_authenticated %}
+            <a href="{% url 'accounts:profile' %}" class="profile-link">
+                <i class="fas fa-user-alt"></i>
+            </a>
+            {% endif %}
+        </div>  
+    </div>
+</div>

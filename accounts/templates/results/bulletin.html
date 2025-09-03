@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relevé de Notes - {{ student.get_full_name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --info: #4895ef;
+            --warning: #f72585;
+            --danger: #e63946;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.4;
+            color: #333;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 0.5cm;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
+        }
+        
+        .university-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary;
+            margin-bottom: 5px;
+        }
+        
+        .university-address {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .document-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: var(--dark);
+            text-transform: uppercase;
+        }
+        
+        .student-info {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .student-info td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .student-info .label {
+            font-weight: bold;
+            background-color: #f5f5f5;
+            width: 30%;
+        }
+        
+        .grades-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .grades-table th, .grades-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .grades-table th {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .grades-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .summary {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .summary-label {
+            font-weight: bold;
+        }
+        
+        .signature-area {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .signature-box {
+            width: 45%;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .badge-success {
+            background-color: var(--success);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .badge-danger {
+            background-color: var(--danger);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .container {
+                width: 100%;
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .grades-table {
+                page-break-inside: avoid;
+            }
+        }
+        
+        .print-button {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn-print {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-print:hover {
+            background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+        }
+        
+        .credits-info {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #7f8c8d;
+        }
+        
+        .mention {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Styles pour les écrans */
+        @media screen {
+            .screen-only {
+                display: block;
+            }
+        }
+
+        /* Correction pour l'impression */
+        @media print {
+            .screen-only {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <div class="header">
+            <div class="university-name">Université GestiClass</div>
+            <div class="university-address">123 Avenue de l'Éducation, 75000 Paris - Tél: 01 23 45 67 89</div>
+            <div class="document-title">RELEVÉ DE NOTES UNIVERSITAIRE</div>
+            <div>Année Universitaire: {% now "Y" %}/{% now "Y"|add:1 %}</div>
+            <div>Semestre: {{ semester|default:"Non spécifié" }}</div>
+        </div>
+        
+        <!-- Informations de l'étudiant -->
+        <table class="student-info">
+            <tr>
+                <td class="label">Nom et Prénom:</td>
+                <td>{{ student.get_full_name }}</td>
+                <td class="label">Filière:</td>
+                <td>{{ student.specialty|default:"Non spécifié" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Date de Naissance:</td>
+                <td>{{ student.birth_date|date:"d/m/Y"|default:"Non spécifié" }}</td>
+                <td class="label">Niveau:</td>
+                <td>{{ student.niveau|default:"Non spécifié" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Email:</td>
+                <td>{{ student.email }}</td>
+                <td class="label">Téléphone:</td>
+                <td>{{ student.phone|default:"Non spécifié" }}</td>
+            </tr>
+        </table>
+        
+        <!-- Notes et appréciations -->
+        <table class="grades-table">
+            <thead>
+                <tr>
+                    <th>Modules</th>
+                    <th>Code</th>
+                    <th>Coefficient</th>
+                    <th>Note</th>
+                    <th>Mention</th>
+                    <th>Date examen</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.module.name }}</td>
+                    <td>{{ result.module.code }}</td>
+                    <td>{{ result.module.coefficient }}</td>
+                    <td>{{ result.score }}/20</td>
+                    <td>{{ result.get_grade }}</td>
+                    <td>{{ result.exam_date|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if result.score >= 10 %}
+                            <span class="badge-success">Validé</span>
+                        {% else %}
+                            <span class="badge-danger">Non validé</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Résultats et statistiques -->
+        <div class="summary">
+            <div class="summary-item">
+                <span class="summary-label">Moyenne Générale:</span>
+                <span>{{ average|floatformat:2 }}/20</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Nombre de modules:</span>
+                <span>{{ results.count }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Modules validés:</span>
+                <span>{{ results_validés }}/{{ results.count }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Mention:</span>
+                <span class="mention">{{ mention }}</span>
+            </div>
+        </div>
+        
+        <!-- Zone de signatures -->
+        <div class="signature-area">
+            <div class="signature-box">
+                Le Responsable de Filière
+            </div>
+            <div class="signature-box">
+                Le Directeur de l'UFR
+            </div>
+        </div>
+        
+        <!-- Pied de page -->
+        <div class="footer">
+            Date d'édition: {% now "d/m/Y" %} - Relevé généré par GestiClass
+        </div>
+    </div>
+    
+    <!-- Bouton d'impression (visible seulement à l'écran) -->
+    <div class="print-button no-print screen-only">
+        <button class="btn-print" onclick="window.print()">
+            <i class="fas fa-print"></i> Imprimer le relevé
+        </button>
+        
+        <div style="margin-top: 20px;">
+            <a href="{% url 'accounts:results_list' %}" style="color: var(--primary); text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Retour aux résultats
+            </a>
+        </div>
+    </div>
+
+    <!-- Inclure Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+    // Script pour améliorer l'expérience d'impression
+    document.addEventListener('DOMContentLoaded', function() {
+        // Préparer le titre pour l'impression
+        const originalTitle = document.title;
+        
+        window.addEventListener('beforeprint', function() {
+            document.title = "Bulletin de " + "{{ student.get_full_name }}";
+        });
+        
+        window.addEventListener('afterprint', function() {
+            document.title = originalTitle;
+        });
+    });
+    </script>
+</body>
+</html>

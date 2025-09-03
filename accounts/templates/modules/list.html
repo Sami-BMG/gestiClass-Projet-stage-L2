@@ -1,0 +1,330 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-book me-2"></i>Gestion des Modules</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li>Modules</li>
+            </ul>
+        </div>
+        
+        <!-- Bouton Créer un module - UNIQUEMENT pour les admins -->
+        {% if is_admin %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModuleModal">
+            <i class="fas fa-plus-circle me-1"></i> Créer un module
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Tableau des modules -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Liste des modules</h6>
+            
+            <div class="d-flex gap-2">
+                <!-- Barre de recherche - Visible pour tous -->
+                <div class="input-group" style="width: 300px;">
+                    <input type="text" class="form-control" placeholder="Rechercher un module..." id="searchInput">
+                    <button class="btn btn-outline-primary" type="button" id="searchButton">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="moduleTable" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Nom</th>
+                            <th>Coefficient</th>
+                            <th>Enseignant responsable</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for module in modules %}
+                        <tr>
+                            <td>{{ module.code }}</td>
+                            <td>{{ module.name }}</td>
+                            <td>{{ module.coefficient }}</td>
+                            <td>
+                                {% if module.teacher %}
+                                    {{ module.teacher.get_full_name }}
+                                {% else %}
+                                    Non assigné
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <!-- Voir détails - Toujours visible pour tous -->
+                                    <a href="{% url 'accounts:module_detail' module.id %}" 
+                                       class="btn btn-outline-primary btn-sm" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Voir détails">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </a>
+                                    
+                                    <!-- Modifier et Supprimer - UNIQUEMENT pour les admins -->
+                                    {% if is_admin %}
+                                    <!-- Bouton Modifier -->
+                                    <a href="{% url 'accounts:update_module' module.id %}" 
+                                       class="btn btn-outline-warning btn-sm" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Modifier">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    
+                                    <!-- Bouton Supprimer -->
+                                    <button class="btn btn-outline-danger btn-sm" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModuleModal"
+                                            data-module-id="{{ module.id }}"
+                                            data-module-name="{{ module.code }} - {{ module.name }}"
+                                            title="Supprimer">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">Aucun module enregistré</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if modules.has_other_pages %}
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if modules.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ modules.previous_page_number }}" tabindex="-1">Précédent</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Précédent</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in modules.paginator.page_range %}
+                    {% if modules.number == i %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if modules.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ modules.next_page_number }}">Suivant</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Suivant</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour créer un module -->
+<div class="modal fade" id="createModuleModal" tabindex="-1" aria-labelledby="createModuleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="createModuleModalLabel">
+                    <i class="fas fa-book me-2"></i>Créer un nouveau module
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="createModuleForm" method="POST" action="{% url 'accounts:create_module' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- Affichage des messages d'erreur -->
+                    {% if messages %}
+                    <div class="alert alert-danger" id="formErrors" style="display: none;">
+                        <ul class="mb-0">
+                            {% for message in messages %}
+                            <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="code" class="form-label">Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="code" name="code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="coefficient" class="form-label">Coefficient <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="coefficient" name="coefficient" min="1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="teacher" class="form-label">Enseignant responsable <span class="text-danger">*</span></label>
+                            <select class="form-select" id="teacher" name="teacher" required>
+                                <option value="">Sélectionner un enseignant</option>
+                                {% for teacher in teachers %}
+                                <option value="{{ teacher.id }}">{{ teacher.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">Créer le module</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le module :</p>
+                <h6 class="text-center text-danger mb-3" id="moduleName"></h6>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    Cette action est irréversible.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form method="post" action="" id="deleteForm" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="module_id" id="deleteModuleId">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fonctionnalité de recherche
+    document.getElementById('searchButton').addEventListener('click', function() {
+        const searchText = document.getElementById('searchInput').value.toLowerCase();
+        const table = document.getElementById('moduleTable');
+        const rows = table.getElementsByTagName('tr');
+        
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let found = false;
+            
+            for (let j = 0; j < cells.length - 1; j++) {
+                const cellText = cells[j].textContent.toLowerCase();
+                if (cellText.includes(searchText)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            rows[i].style.display = found ? '' : 'none';
+        }
+    });
+    
+    // Activer les tooltips Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Gestion du modal de suppression
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteModal = document.getElementById('deleteModuleModal');
+        const moduleName = document.getElementById('moduleName');
+        const deleteForm = document.getElementById('deleteForm');
+        const deleteModuleId = document.getElementById('deleteModuleId');
+        
+        // Lorsque le modal s'ouvre
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const moduleId = button.getAttribute('data-module-id');
+            const moduleNameValue = button.getAttribute('data-module-name');
+            
+            // Mettre à jour le contenu du modal
+            moduleName.textContent = moduleNameValue;
+            deleteModuleId.value = moduleId;
+            
+            // Mettre à jour l'action du formulaire
+            deleteForm.action = "{% url 'accounts:delete_module' 0 %}".replace('0', moduleId);
+        });
+    });
+    
+    // Script pour gérer l'affichage des erreurs et la soumission du formulaire
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createModuleForm');
+        const errorDiv = document.getElementById('formErrors');
+        
+        form.addEventListener('submit', function(e) {
+            // Afficher un indicateur de chargement
+            const submitButton = document.getElementById('submitButton');
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Création...';
+            submitButton.disabled = true;
+            
+            // Cacher les erreurs précédentes
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        });
+        
+        // Si le modal est fermé, réinitialiser le bouton
+        $('#createModuleModal').on('hidden.bs.modal', function () {
+            const submitButton = document.getElementById('submitButton');
+            submitButton.innerHTML = 'Créer le module';
+            submitButton.disabled = false;
+            
+            // Réafficher les erreurs s'il y en a
+            {% if messages %}
+            if (document.getElementById('formErrors')) {
+                document.getElementById('formErrors').style.display = 'block';
+            }
+            {% endif %}
+        });
+        
+        // Afficher les erreurs s'il y en a au chargement de la page
+        {% if messages %}
+        if (document.getElementById('formErrors')) {
+            document.getElementById('formErrors').style.display = 'block';
+            
+            // Ouvrir automatiquement le modal s'il y a des erreurs
+            var modal = new bootstrap.Modal(document.getElementById('createModuleModal'));
+            modal.show();
+        }
+        {% endif %}
+    });
+</script>
+{% endblock %}
