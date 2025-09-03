@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -8,12 +8,14 @@ class User(AbstractUser):
         ('teacher', 'Enseignant'),
         ('student', 'Élève'),
     )
+    
     profil = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     phone = models.CharField(max_length=20, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     photo = models.ImageField(upload_to='users/', null=True, blank=True)
     specialty = models.CharField(max_length=100, null=True, blank=True)
     hire_date = models.DateField(null=True, blank=True)
+    address = models.TextField(blank=True)
     
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.username})"
@@ -28,7 +30,26 @@ class User(AbstractUser):
         return self.profil == 'student'
     
     def get_type(self):
-        return self.profil == 'admin' if self.is_administrator() else 'teacher' if self.is_teacher() else 'student'
+        return self.profil
+
+class Student(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    student_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    enrollment_date = models.DateField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name} ({self.student_id})"
+
+class Teacher(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    teacher_id = models.CharField(max_length=20,null=True, unique=True)
+    hire_date = models.DateField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name} ({self.teacher_id})"
+    
+    class Meta:
+        ordering = ['user__last_name', 'user__first_name']
 
 class Module(models.Model):
     SEMESTER_CHOICES = [
@@ -63,26 +84,6 @@ class Module(models.Model):
     
     def __str__(self):
         return f"{self.code} - {self.name}"
-
-class Teacher(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    specialty = models.CharField(max_length=100)
-    hire_date = models.DateField()
-    
-    def __str__(self):
-        return f"{self.user.get_full_name()} - {self.specialty}"
-
-    class Meta:
-        # CORRECTION : Utiliser un champ existant ou supprimer l'ordering
-        ordering = ['user__last_name', 'user__first_name']  # Ordonner par nom de l'utilisateur
-
-class Student(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nom = models.CharField(max_length=100, null=True, blank=True)
-    prenom = models.CharField(max_length=100, null=True, blank=True)
-    
-    def __str__(self):
-        return f"{self.user.get_full_name()}"
 
 class Result(models.Model):
     SEMESTER_CHOICES = [
@@ -124,7 +125,77 @@ class Result(models.Model):
         else:
             return "Insuffisant"
 
-# SUPPRIMER LES DOUBLONS CI-DESSOUS - Ces classes sont déjà définies plus haut
+class Timetable(models.Model):
+    DAY_CHOICES = [
+        ('monday', 'Lundi'),
+        ('tuesday', 'Mardi'),
+        ('wednesday', 'Mercredi'),
+        ('thursday', 'Jeudi'),
+        ('friday', 'Vendredi'),
+        ('saturday', 'Samedi'),
+    ]
+    
+    TIMESLOT_CHOICES = [
+        ('1', '8h-10h'),
+        ('2', '10h-12h'),
+        ('3', '14h-16h'),
+        ('4', '16h-18h'),
+    ]
+    
+    week = models.DateField()
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    timeslot = models.CharField(max_length=1, choices=TIMESLOT_CHOICES)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'profil': 'teacher'})
+    
+    class Meta:
+        unique_together = ('week', 'day', 'timeslot')  # SEULEMENT ces 3 champs
+    
+    def __str__(self):
+        return f"{self.get_day_display()} {self.get_timeslot_display()} - {self.module.name}"
+
+
+class TimetableEntry(models.Model):
+    DAY_CHOICES = [
+        ('MONDAY', 'Lundi'),
+        ('TUESDAY', 'Mardi'),
+        ('WEDNESDAY', 'Mercredi'),
+        ('THURSDAY', 'Jeudi'),
+        ('FRIDAY', 'Vendredi'),
+        ('SATURDAY', 'Samedi'),
+    ]
+    
+    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE, related_name='entries')
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    module = models.ForeignKey(Module, on_delete=models.SET_NULL, null=True, blank=True)
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.day} {self.start_time}-{self.end_time} - {self.module if self.module else 'Aucun module'}"
+
+
+
+class InfoMessage(models.Model):
+    AUDIENCE_CHOICES = [
+        ('student', 'Étudiants'),
+        ('teacher', 'Enseignants'),
+        ('all', 'Tous'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    audience = models.CharField(max_length=10, choices=AUDIENCE_CHOICES)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return f"Info for {self.get_audience_display()} - {self.title}"
+
 
 class ContactMessage(models.Model):
     TYPE_CHOICES = [
@@ -148,6 +219,7 @@ class ContactMessage(models.Model):
     subject = models.CharField(max_length=200, verbose_name="Sujet")
     message = models.TextField(verbose_name="Message")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Statut")
+    is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -155,6 +227,9 @@ class ContactMessage(models.Model):
         ordering = ['-created_at']
         verbose_name = "Message de contact"
         verbose_name_plural = "Messages de contact"
+        
+    def __str__(self):
+        return f"Message de {self.name} - {self.created_at}"
     
     def __str__(self):
         return f"{self.subject} - {self.get_message_type_display()}"
@@ -201,15 +276,3 @@ class SchoolInfo(models.Model):
     
     def __str__(self):
         return self.name
-    
-    
-    
-class Grade(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    valeur = models.FloatField()
-    appreciation = models.TextField(blank=True)
-    date = models.DateField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"{self.student} - {self.module} : {self.valeur}"    

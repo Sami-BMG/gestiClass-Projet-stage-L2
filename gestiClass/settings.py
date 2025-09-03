@@ -112,8 +112,8 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "accounts.User"
-#pour les emails en console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 
 LOGIN_REDIRECT_URL = 'dashboard:home'  # Redirection après connexion
 LOGOUT_REDIRECT_URL = 'accounts:login'  # Redirection après déconnexion

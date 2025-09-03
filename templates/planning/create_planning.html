@@ -1,0 +1,384 @@
+{% extends 'models/base.html' %}
+
+{% block content %}
+<div class="content">
+    <!-- Modal pour l'emploi du temps -->
+    <div class="modal fade" id="timetableModal" tabindex="-1" role="dialog" aria-labelledby="timetableModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="timetableModalLabel">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        Emploi du temps - {{ class_name }}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Sélectionnez une semaine pour consulter ou modifier l'emploi du temps.
+                        {% if user_profile.role != 'admin' %}
+                        <strong>Mode consultation seulement.</strong>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label for="week_select" class="col-sm-2 col-form-label">Semaine:</label>
+                        <div class="col-sm-4">
+                            <input type="week" class="form-control" id="week_select" name="week" required 
+                                   value="{{ current_week|date:'Y-\WW' }}">
+                        </div>
+                        <div class="col-sm-6 text-right">
+                            {% if user_profile.role == 'admin' %}
+                            <button type="button" class="btn btn-success" id="saveTimetable">
+                                <i class="fas fa-save mr-2"></i>Enregistrer
+                            </button>
+                            <button type="button" class="btn btn-primary ml-2" id="newTimetable">
+                                <i class="fas fa-plus mr-2"></i>Nouveau planning
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="timetable-container mt-4">
+                        <table class="table table-bordered timetable-table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width: 10%">Heure/Jour</th>
+                                    <th style="width: 15%">Lundi</th>
+                                    <th style="width: 15%">Mardi</th>
+                                    <th style="width: 15%">Mercredi</th>
+                                    <th style="width: 15%">Jeudi</th>
+                                    <th style="width: 15%">Vendredi</th>
+                                    <th style="width: 15%">Samedi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Matin (8h-12h) -->
+                                <tr>
+                                    <td class="align-middle">8h-10h</td>
+                                    {% for day in days %}
+                                    <td>
+                                        {% if user_profile.role == 'admin' %}
+                                        <select class="form-control module-select" data-day="{{ day }}" data-slot="8-10">
+                                            <option value="">-- Module --</option>
+                                            {% for module in modules %}
+                                            <option value="{{ module.id }}">{{ module.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="8-10">
+                                            <option value="">-- Enseignant --</option>
+                                            {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% else %}
+                                        <div class="view-mode">
+                                            <p class="mb-0 module-name">Mathématiques</p>
+                                            <small class="text-muted teacher-name">M. Dupont</small>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td class="align-middle">10h-12h</td>
+                                    {% for day in days %}
+                                    <td>
+                                        {% if user_profile.role == 'admin' %}
+                                        <select class="form-control module-select" data-day="{{ day }}" data-slot="10-12">
+                                            <option value="">-- Module --</option>
+                                            {% for module in modules %}
+                                            <option value="{{ module.id }}">{{ module.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="10-12">
+                                            <option value="">-- Enseignant --</option>
+                                            {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% else %}
+                                        <div class="view-mode">
+                                            <p class="mb-0 module-name">Français</p>
+                                            <small class="text-muted teacher-name">Mme. Martin</small>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                
+                                <!-- Après-midi (14h-18h) - Pas le samedi -->
+                                <tr>
+                                    <td class="align-middle">14h-16h</td>
+                                    {% for day in week_days %}
+                                    <td>
+                                        {% if user_profile.role == 'admin' %}
+                                        <select class="form-control module-select" data-day="{{ day }}" data-slot="14-16">
+                                            <option value="">-- Module --</option>
+                                            {% for module in modules %}
+                                            <option value="{{ module.id }}">{{ module.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="14-16">
+                                            <option value="">-- Enseignant --</option>
+                                            {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% else %}
+                                        <div class="view-mode">
+                                            <p class="mb-0 module-name">Physique</p>
+                                            <small class="text-muted teacher-name">M. Leroy</small>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                    <td class="disabled-cell align-middle text-center">
+                                        <em>Pas de cours</em>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="align-middle">16h-18h</td>
+                                    {% for day in week_days %}
+                                    <td>
+                                        {% if user_profile.role == 'admin' %}
+                                        <select class="form-control module-select" data-day="{{ day }}" data-slot="16-18">
+                                            <option value="">-- Module --</option>
+                                            {% for module in modules %}
+                                            <option value="{{ module.id }}">{{ module.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="16-18">
+                                            <option value="">-- Enseignant --</option>
+                                            {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% else %}
+                                        <div class="view-mode">
+                                            <p class="mb-0 module-name">Histoire</p>
+                                            <small class="text-muted teacher-name">Mme. Bernard</small>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                    <td class="disabled-cell align-middle text-center">
+                                        <em>Pas de cours</em>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                    {% if user_profile.role == 'admin' %}
+                    <button type="button" class="btn btn-primary" id="saveTimetableFooter">
+                        <i class="fas fa-save mr-2"></i>Enregistrer
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timetable-table th, .timetable-table td {
+    vertical-align: middle;
+}
+
+.disabled-cell {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.view-mode {
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.module-name {
+    font-weight: 500;
+}
+
+.teacher-name {
+    font-style: italic;
+}
+
+/* Style pour les sélecteurs */
+.module-select, .teacher-select {
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .modal-dialog {
+        max-width: 95%;
+    }
+    
+    .timetable-container {
+        overflow-x: auto;
+    }
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser les données si l'utilisateur est admin
+        {% if user_profile.role == 'admin' %}
+        // Charger l'emploi du temps pour la semaine sélectionnée
+        $('#week_select').change(function() {
+            loadTimetableData($(this).val());
+        });
+        
+        // Enregistrer l'emploi du temps
+        $('#saveTimetable, #saveTimetableFooter').click(function() {
+            saveTimetableData();
+        });
+        
+        // Nouveau planning
+        $('#newTimetable').click(function() {
+            if(confirm('Voulez-vous créer un nouveau planning pour cette semaine? Les données existantes seront effacées.')) {
+                clearTimetable();
+            }
+        });
+        
+        // Charger les données initiales
+        loadTimetableData($('#week_select').val());
+        {% else %}
+        // Mode consultation seulement
+        $('#week_select').change(function() {
+            loadTimetableData($(this).val());
+        });
+        
+        // Charger les données initiales
+        loadTimetableData($('#week_select').val());
+        {% endif %}
+        
+        function loadTimetableData(week) {
+            $.ajax({
+                url: "{% url 'dashboard:get_timetable_data'  %}",
+                type: "GET",
+                data: {
+                    'week': week
+                },
+                success: function(response) {
+                    if (response.success) {
+                        populateTimetable(response.data);
+                    } else {
+                        console.error('Erreur:', response.error);
+                        alert('Erreur lors du chargement des données');
+                    }
+                },
+                error: function() {
+                    alert('Erreur de connexion au serveur');
+                }
+            });
+        }
+        
+        function populateTimetable(data) {
+            // Réinitialiser tous les sélecteurs
+            $('.module-select, .teacher-select').val('');
+            
+            // Remplir avec les données existantes
+            for (const day in data) {
+                for (const slot in data[day]) {
+                    const entry = data[day][slot];
+                    $(`.module-select[data-day="${day}"][data-slot="${slot}"]`).val(entry.module_id);
+                    $(`.teacher-select[data-day="${day}"][data-slot="${slot}"]`).val(entry.teacher_id);
+                }
+            }
+        }
+        
+        function saveTimetableData() {
+            const week = $('#week_select').val();
+            const timetableData = {};
+            
+            // Collecter les données du formulaire
+            $('.module-select').each(function() {
+                const day = $(this).data('day');
+                const slot = $(this).data('slot');
+                const moduleId = $(this).val();
+                const teacherId = $(this).closest('td').find('.teacher-select').val();
+                
+                if (!timetableData[day]) {
+                    timetableData[day] = {};
+                }
+                
+                timetableData[day][slot] = {
+                    module: moduleId,
+                    teacher: teacherId
+                };
+            });
+            
+            $.ajax({
+                url: "{% url 'dashboard:save_timetable_data' %}",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    'week': week,
+                    'timetable_data': timetableData
+                }),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                    } else {
+                        alert('Erreur: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('Erreur de connexion au serveur');
+                }
+            });
+        }
+        
+        function clearTimetable() {
+            const week = $('#week_select').val();
+            
+            $.ajax({
+                url: "{% url 'dashboard:clear_timetable' %}",
+                type: "POST",
+                data: {
+                    'week': week,
+                    'csrfmiddlewaretoken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('.module-select, .teacher-select').val('');
+                        alert(response.message);
+                    } else {
+                        alert('Erreur: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('Erreur de connexion au serveur');
+                }
+            });
+        }
+        
+        // Fonction utilitaire pour récupérer le cookie CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

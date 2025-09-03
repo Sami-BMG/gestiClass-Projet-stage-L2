@@ -1,0 +1,176 @@
+{% extends 'models/base.html' %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-lightbulb"></i>Suggestions</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li>Dashboard</li>
+                <li>Suggestions</li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres de statut -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Filtrer par statut</h5>
+            <div class="btn-group" role="group">
+                <a href="?status=all" class="btn btn-outline-primary {% if status_filter == 'all' %}active{% endif %}">Tous</a>
+                <a href="?status=read" class="btn btn-outline-success {% if status_filter == 'read' %}active{% endif %}">Lues</a>
+                <a href="?status=unread" class="btn btn-outline-warning {% if status_filter == 'unread' %}active{% endif %}">Non lues</a>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'dashboard:suggestions_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-sync me-1"></i> Actualiser
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Liste des suggestions</h3>
+            <span class="badge bg-primary">{{ suggestions.count }} suggestion(s)</span>
+        </div>
+        <div class="card-body">
+            {% if suggestions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Suggestion</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <!-- Dans suggestions.html -->
+                    <tbody>
+                        {% for suggestion in suggestions %}
+                        <tr class="{% if not suggestion.is_read %}table-warning{% endif %}">
+                            <td>{{ suggestion.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>{{ suggestion.name }}</td>
+                            <td>{{ suggestion.email }}</td>
+                            <td>
+                                <button type="button" class="btn btn-link p-0 text-start" data-bs-toggle="modal" 
+                                        data-bs-target="#suggestionModal" data-id="{{ suggestion.id }}">
+                                    {{ suggestion.message|truncatewords:10 }}
+                                </button>
+                            </td>
+                            <td>
+                                {% if suggestion.is_read %}
+                                    <span class="badge bg-success">Lue</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Non lue</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    {% if not suggestion.is_read %}
+                                    <a href="{% url 'dashboard:mark_suggestion_read' suggestion.id %}" 
+                                    class="btn btn-sm btn-outline-success" title="Marquer comme lue">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'dashboard:delete_suggestion' suggestion.id %}" 
+                                    class="btn btn-sm btn-outline-danger" 
+                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')"
+                                    title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Aucune suggestion pour le moment.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour afficher le détail d'une suggestion -->
+<div class="modal fade" id="suggestionModal" tabindex="-1" aria-labelledby="suggestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="suggestionModalLabel">Détail de la suggestion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Date:</strong> <span id="modal-date"></span></p>
+                <p><strong>Nom:</strong> <span id="modal-name"></span></p>
+                <p><strong>Email:</strong> <span id="modal-email"></span></p>
+                <p><strong>Message:</strong></p>
+                <div id="modal-message" class="border p-2 bg-light rounded"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    background-color: #f5f7fb;
+    font-weight: bold;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.table-hover tbody tr:hover {
+    cursor: pointer;
+}
+</style>
+
+<script>
+// Script pour charger les détails d'une suggestion via AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = new bootstrap.Modal(document.getElementById('suggestionModal'));
+    const modalDate = document.getElementById('modal-date');
+    const modalName = document.getElementById('modal-name');
+    const modalEmail = document.getElementById('modal-email');
+    const modalMessage = document.getElementById('modal-message');
+    
+    // Écouter l'ouverture du modal
+    document.getElementById('suggestionModal').addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const suggestionId = button.getAttribute('data-id');
+        
+        // Charger les données via AJAX
+        fetch(`/dashboard/get-suggestion-detail/?suggestion_id=${suggestionId}`)
+            .then(response => response.json())
+            .then(data => {
+                modalDate.textContent = data.created_at;
+                modalName.textContent = data.name;
+                modalEmail.textContent = data.email;
+                modalMessage.textContent = data.message;
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                modalMessage.textContent = "Erreur lors du chargement des détails.";
+            });
+    });
+});
+</script>
+{% endblock %}
