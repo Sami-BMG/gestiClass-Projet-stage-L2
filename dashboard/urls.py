@@ -25,6 +25,6 @@ urlpatterns = [
     path('timetable/', views.timetable_view, name='timetable_view'),
     path('timetable/data/', views.get_timetable_data, name='get_timetable_data'),
     path('timetable/save/', views.save_timetable_data, name='save_timetable_data'),
-    path('timetable/clear/', views.clear_timetable, name='clear_timetable'),
+    #path('timetable/clear/', views.clear_timetable, name='clear_timetable'),
 
 ]
