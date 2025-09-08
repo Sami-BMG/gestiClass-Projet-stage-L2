@@ -1,241 +1,424 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relevé de Notes - {{ student.get_full_name }}</title>
-    <style>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relevé de Notes - {{ student.get_full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-dark: #3a0ca3;
+        --secondary: #3f37c9;
+        --success: #4cc9f0;
+        --info: #4895ef;
+        --warning: #f72585;
+        --danger: #e63946;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gray: #6c757d;
+        --light-gray: #e9ecef;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .transcript-container {
+        max-width: 21cm;
+        margin: 0 auto;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+    }
+    
+    .transcript-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 25px 30px;
+        text-align: center;
+        position: relative;
+    }
+    
+    .transcript-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--success) 0%, var(--info) 100%);
+    }
+    
+    .university-name {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 5px;
+        letter-spacing: 0.5px;
+    }
+    
+    .university-address {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 15px;
+    }
+    
+    .document-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 15px 0 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .academic-info {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+    
+    .academic-info span {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+    
+    .student-info-container {
+        padding: 20px 30px;
+        background-color: white;
+    }
+    
+    .student-info {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .student-info td {
+        padding: 12px 15px;
+        border: 1px solid var(--light-gray);
+    }
+    
+    .student-info .label {
+        font-weight: 600;
+        background-color: #f8f9fa;
+        width: 30%;
+        color: var(--dark);
+    }
+    
+    .grades-container {
+        padding: 0 30px 20px;
+    }
+    
+    .grades-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+        page-break-inside: avoid;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+    }
+    
+    .grades-table th, .grades-table td {
+        padding: 12px 15px;
+        text-align: center;
+        border: 1px solid var(--light-gray);
+    }
+    
+    .grades-table th {
+        background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+    }
+    
+    .grades-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    .grades-table tr:hover {
+        background-color: #f1f5ff;
+    }
+    
+    .module-name {
+        text-align: left;
+        font-weight: 500;
+    }
+    
+    .summary {
+        padding: 20px;
+        background: linear-gradient(to right, #f8f9fa, #f1f5ff);
+        border-radius: var(--border-radius);
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 15px;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .summary-label {
+        font-weight: 500;
+        color: var(--gray);
+    }
+    
+    .summary-value {
+        font-weight: 600;
+        color: var(--dark);
+    }
+    
+    .mention {
+        color: var(--primary);
+        font-weight: 700;
+    }
+    
+    .signature-area {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0;
+        padding: 0 30px;
+    }
+    
+    .signature-box {
+        width: 45%;
+        border-top: 2px solid var(--gray);
+        padding-top: 15px;
+        text-align: center;
+        font-size: 14px;
+        color: var(--gray);
+    }
+    
+    .transcript-footer {
+        padding: 15px 30px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--gray);
+        background-color: #f8f9fa;
+        border-top: 1px solid var(--light-gray);
+    }
+    
+    .badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .badge-success {
+        background-color: rgba(76, 201, 240, 0.2);
+        color: #1686a0;
+    }
+    
+    .badge-danger {
+        background-color: rgba(230, 57, 70, 0.2);
+        color: #c91c2d;
+    }
+    
+    .transcript-actions {
+        text-align: center;
+        margin: 30px auto;
+        max-width: 21cm;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: var(--border-radius);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+    }
+    
+    .btn-print {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: var(--box-shadow);
+    }
+    
+    .btn-print:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-back {
+        background: white;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        margin-left: 15px;
+    }
+    
+    .btn-back:hover {
+        background: #f8f9fa;
+    }
+    
+    .credits-info {
+        font-size: 12px;
+        margin-top: 20px;
+        color: var(--gray);
+        text-align: center;
+    }
+    
+    .progress-container {
+        margin-top: 5px;
+        background: #e9ecef;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--success) 0%, var(--info) 100%);
+        border-radius: 4px;
+    }
+    
+    /* Styles pour l'impression */
+    @media print {
         @page {
             size: A4;
-            margin: 1cm;
-        }
-        
-        :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #4cc9f0;
-            --info: #4895ef;
-            --warning: #f72585;
-            --danger: #e63946;
-            --light: #f8f9fa;
-            --dark: #212529;
+            margin: 1.5cm;
         }
         
         body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.4;
-            color: #333;
-            background-color: #fff;
-            margin: 0;
+            background: white;
             padding: 0;
+            font-size: 12pt;
         }
         
-        .container {
-            width: 100%;
-            max-width: 21cm;
-            margin: 0 auto;
-            padding: 0.5cm;
+        .transcript-container {
+            box-shadow: none;
+            border-radius: 0;
+            max-width: 100%;
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 15px;
-        }
-        
-        .university-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: var(--primary;
-            margin-bottom: 5px;
-        }
-        
-        .university-address {
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-        
-        .document-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 15px 0;
-            color: var(--dark);
-            text-transform: uppercase;
-        }
-        
-        .student-info {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        
-        .student-info td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        
-        .student-info .label {
-            font-weight: bold;
-            background-color: #f5f5f5;
-            width: 30%;
+        .no-print {
+            display: none;
         }
         
         .grades-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
             page-break-inside: avoid;
         }
         
-        .grades-table th, .grades-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
+        .transcript-header {
+            background: #4361ee !important;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
         }
         
         .grades-table th {
-            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            font-weight: bold;
+            background: #4361ee !important;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
         }
         
-        .grades-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .btn {
+            display: none;
         }
         
         .summary {
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            background: #f8f9fa !important;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
         }
-        
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        
-        .summary-label {
-            font-weight: bold;
-        }
-        
-        .signature-area {
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .signature-box {
-            width: 45%;
-            border-top: 1px solid #333;
-            padding-top: 10px;
-            text-align: center;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .student-info td {
+            padding: 8px 10px;
             font-size: 14px;
         }
         
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 12px;
-            color: #7f8c8d;
+        .grades-table th, 
+        .grades-table td {
+            padding: 8px 10px;
+            font-size: 14px;
         }
         
-        .badge-success {
-            background-color: var(--success);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+        .summary {
+            grid-template-columns: 1fr;
         }
         
-        .badge-danger {
-            background-color: var(--danger);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+        .signature-area {
+            flex-direction: column;
+            gap: 30px;
         }
         
-        @media print {
-            body {
-                margin: 0;
-                padding: 0;
-            }
-            
-            .container {
-                width: 100%;
-                padding: 0;
-            }
-            
-            .no-print {
-                display: none;
-            }
-            
-            .grades-table {
-                page-break-inside: avoid;
-            }
+        .signature-box {
+            width: 100%;
         }
         
-        .print-button {
-            text-align: center;
-            margin: 20px 0;
+        .academic-info {
+            flex-direction: column;
+            gap: 10px;
         }
         
-        .btn-print {
-            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
+        .transcript-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         
-        .btn-print:hover {
-            background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+        .btn-back {
+            margin-left: 0;
+        }
+    }
+    
+    /* Animation pour le chargement */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .transcript-container {
+        animation: fadeIn 0.5s ease;
+    }
+    
+    /* Amélioration de l'accessibilité */
+    @media (prefers-reduced-motion: reduce) {
+        .transcript-container {
+            animation: none;
         }
         
-        .credits-info {
-            font-size: 12px;
-            margin-top: 5px;
-            color: #7f8c8d;
+        .btn:hover {
+            transform: none;
         }
-        
-        .mention {
-            font-weight: bold;
-            color: var(--primary);
-        }
+    }
+</style>
+{% endblock %}
 
-        /* Styles pour les écrans */
-        @media screen {
-            .screen-only {
-                display: block;
-            }
-        }
-
-        /* Correction pour l'impression */
-        @media print {
-            .screen-only {
-                display: none;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- En-tête -->
-        <div class="header">
-            <div class="university-name">Université GestiClass</div>
-            <div class="university-address">123 Avenue de l'Éducation, 75000 Paris - Tél: 01 23 45 67 89</div>
-            <div class="document-title">RELEVÉ DE NOTES UNIVERSITAIRE</div>
-            <div>Année Universitaire: {% now "Y" %}/{% now "Y"|add:1 %}</div>
-            <div>Semestre: {{ semester|default:"Non spécifié" }}</div>
+{% block content %}
+<div class="transcript-container">
+    <!-- En-tête -->
+    <div class="transcript-header">
+        <div class="university-name">Université GestiClass</div>
+        <div class="university-address">123 Avenue de l'Éducation, 75000 Paris - Tél: 01 23 45 67 89</div>
+        <div class="document-title">RELEVÉ DE NOTES UNIVERSITAIRE</div>
+        <div class="academic-info">
+            <span>Année Universitaire: {% now "Y" %}/{% now "Y"|add:1 %}</span>
+            <span>Semestre: {{ semester|default:"Non spécifié" }}</span>
         </div>
-        
-        <!-- Informations de l'étudiant -->
+    </div>
+    
+    <!-- Informations de l'étudiant -->
+    <div class="student-info-container">
         <table class="student-info">
             <tr>
                 <td class="label">Nom et Prénom:</td>
@@ -256,8 +439,10 @@
                 <td>{{ student.phone|default:"Non spécifié" }}</td>
             </tr>
         </table>
-        
-        <!-- Notes et appréciations -->
+    </div>
+    
+    <!-- Notes et appréciations -->
+    <div class="grades-container">
         <table class="grades-table">
             <thead>
                 <tr>
@@ -273,17 +458,17 @@
             <tbody>
                 {% for result in results %}
                 <tr>
-                    <td>{{ result.module.name }}</td>
+                    <td class="module-name">{{ result.module.name }}</td>
                     <td>{{ result.module.code }}</td>
                     <td>{{ result.module.coefficient }}</td>
-                    <td>{{ result.score }}/20</td>
+                    <td><strong>{{ result.score }}/20</strong></td>
                     <td>{{ result.get_grade }}</td>
                     <td>{{ result.exam_date|date:"d/m/Y" }}</td>
                     <td>
                         {% if result.score >= 10 %}
-                            <span class="badge-success">Validé</span>
+                            <span class="badge badge-success">Validé</span>
                         {% else %}
-                            <span class="badge-danger">Non validé</span>
+                            <span class="badge badge-danger">Non validé</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -295,20 +480,28 @@
         <div class="summary">
             <div class="summary-item">
                 <span class="summary-label">Moyenne Générale:</span>
-                <span>{{ average|floatformat:2 }}/20</span>
+                <span class="summary-value">{{ average|floatformat:2 }}/20</span>
             </div>
             <div class="summary-item">
                 <span class="summary-label">Nombre de modules:</span>
-                <span>{{ results.count }}</span>
+                <span class="summary-value">{{ results.count }}</span>
             </div>
             <div class="summary-item">
                 <span class="summary-label">Modules validés:</span>
-                <span>{{ results_validés }}/{{ results.count }}</span>
+                <span class="summary-value">{{ results_validés }}/{{ results.count }}</span>
             </div>
             <div class="summary-item">
                 <span class="summary-label">Mention:</span>
-                <span class="mention">{{ mention }}</span>
+                <span class="summary-value mention">{{ mention }}</span>
             </div>
+        </div>
+        
+        <!-- Barre de progression pour les modules validés -->
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {% widthratio results_validés results.count 100 %}%"></div>
+        </div>
+        <div class="credits-info">
+            Progression: {% widthratio results_validés results.count 100 %}% de modules validés
         </div>
         
         <!-- Zone de signatures -->
@@ -322,41 +515,50 @@
         </div>
         
         <!-- Pied de page -->
-        <div class="footer">
+        <div class="transcript-footer">
             Date d'édition: {% now "d/m/Y" %} - Relevé généré par GestiClass
         </div>
     </div>
+</div>
+
+<!-- Actions (impression et retour) -->
+<div class="transcript-actions no-print">
+    <button class="btn btn-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Imprimer le relevé
+    </button>
     
-    <!-- Bouton d'impression (visible seulement à l'écran) -->
-    <div class="print-button no-print screen-only">
-        <button class="btn-print" onclick="window.print()">
-            <i class="fas fa-print"></i> Imprimer le relevé
-        </button>
-        
-        <div style="margin-top: 20px;">
-            <a href="{% url 'accounts:results_list' %}" style="color: var(--primary); text-decoration: none;">
-                <i class="fas fa-arrow-left"></i> Retour aux résultats
-            </a>
-        </div>
+    <a href="{% url 'accounts:results_list' %}" class="btn btn-back">
+        <i class="fas fa-arrow-left"></i> Retour aux résultats
+    </a>
+    
+    <div class="credits-info">
+        Ce relevé de notes est un document officiel de l'Université GestiClass
     </div>
+</div>
+{% endblock %}
 
-    <!-- Inclure Font Awesome pour les icônes -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <script>
-    // Script pour améliorer l'expérience d'impression
+{% block extra_js %}
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         // Préparer le titre pour l'impression
         const originalTitle = document.title;
         
         window.addEventListener('beforeprint', function() {
-            document.title = "Bulletin de " + "{{ student.get_full_name }}";
+            document.title = "Bulletin de " + "{{ student.get_full_name }} - Université GestiClass";
         });
         
         window.addEventListener('afterprint', function() {
             document.title = originalTitle;
         });
+        
+        // Ajouter une confirmation avant l'impression
+        const printButton = document.querySelector('.btn-print');
+        if (printButton) {
+            printButton.addEventListener('click', function() {
+                // Optionnel: Ajouter un tracking ou une confirmation
+                console.log('Impression du relevé de notes pour {{ student.get_full_name }}');
+            });
+        }
     });
-    </script>
-</body>
-</html>
+</script>
+{% endblock %}

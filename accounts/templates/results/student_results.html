@@ -11,7 +11,7 @@
                 <li>{{ student.get_full_name }}</li>
             </ul>
         </div>
-        <div class="btn-group">
+        <div class="btn-group"> 
             <!-- Menu dropdown pour les actions du bulletin -->
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -34,8 +34,7 @@
                         </a>
                     </li>
                 </ul>
-            </div>
-            
+            </div>      
             <a href="{% url 'accounts:results_list' %}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Retour
             </a>
@@ -66,6 +65,7 @@
                                     {% if average >= 10 %}Validé{% else %}Non validé{% endif %}
                                 </span>
                             </p>
+                                
                         </div>
                     </div>
                 </div>
@@ -77,28 +77,6 @@
                     <h6 class="card-title">MOYENNE GÉNÉRALE</h6>
                     <h1 class="display-4 fw-bold">{{ average }}</h1>
                     <p class="mb-0">/20</p>
-                </div>
-            </div>
-
-            <!-- Carte d'actions rapides -->
-            <div class="card mt-3">
-                <div class="card-header bg-info text-white">
-                    <h6 class="m-0"><i class="fas fa-bolt me-1"></i> Actions rapides</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'accounts:generate_bulletin' student.id %}" 
-                           class="btn btn-outline-primary btn-sm" target="_blank">
-                            <i class="fas fa-external-link-alt me-1"></i> Voir bulletin complet
-                        </a>
-                        <a href="{% url 'accounts:generate_bulletin' student.id %}?format=pdf" 
-                           class="btn btn-outline-success btn-sm">
-                            <i class="fas fa-file-pdf me-1"></i> Télécharger PDF
-                        </a>
-                        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-print me-1"></i> Imprimer
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

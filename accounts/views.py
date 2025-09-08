@@ -896,7 +896,7 @@ def generate_bulletin(request, student_id):
         response['Content-Disposition'] = f'attachment; filename="bulletin_{student.username}.csv"'
         return response
     
-    return render(request, 'accounts/bulletin.html', context)
+    return render(request, 'results/bulletin.html', context)
 
 
 # ============ VUES POUR LE CONTACT ET INFORMATIONS ============
