@@ -34,7 +34,6 @@
         </div>
         <div class="card stat-card clickable-card"
         onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
-
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="stat-icon" style="background-color: #4CAF50;">
@@ -78,7 +77,7 @@
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             <div class="summary-content">
-                {% if request.user.is_superuser or profil.user == student%}
+                {% if request.user.is_superuser or request.user.profil == 'student' %}
                 <!-- Informations pour les étudiants -->
                 <div class="info-section">
                     <div class="info-card-header">
@@ -107,7 +106,7 @@
                     </div>
                 </div>
                 {% endif %}
-                {% if request.user.is_superuser or profil.user == teacher%}
+                {% if request.user.is_superuser or request.user.profil == 'teacher' %}
                 <!-- Informations pour les enseignants -->
                 <div class="info-section">
                     <div class="info-card-header">

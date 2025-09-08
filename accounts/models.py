@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -84,6 +86,36 @@ class Module(models.Model):
     
     def __str__(self):
         return f"{self.code} - {self.name}"
+
+class Note(models.Model):
+    student = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        limit_choices_to={'profil': 'student'},
+        verbose_name="Étudiant"
+    )
+    module = models.ForeignKey(
+        'Module',
+        on_delete=models.CASCADE,
+        verbose_name="Module"
+    )
+    value = models.FloatField(
+        verbose_name="Note",
+        validators=[MinValueValidator(0), MaxValueValidator(20)]
+    )
+    date = models.DateField(
+        auto_now_add=True,
+        verbose_name="Date d'évaluation"
+    )
+    
+    class Meta:
+        unique_together = ['student', 'module']
+    
+    def __str__(self):
+        return f"{self.student.username} - {self.module.code}: {self.value}"
+
+
+
 
 class Result(models.Model):
     SEMESTER_CHOICES = [

@@ -1,12 +1,15 @@
 {% extends 'models/base.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- En-tête de page -->
+<div>
+</div>
+<div>
+</div>
+<div class="page-title" style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fa; padding:15px 20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:20px;">    <!-- En-tête de page -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">
             <i class="fas fa-calendar-alt mr-2"></i>
-            Emploi du temps - {{ class_name }}
+            Emploi du temps 
         </h1>
         
         <!-- Utiliser user_profile.profil au lieu de user_profile.role -->
@@ -14,12 +17,25 @@
             <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#timetableModal">
                 <i class="fas fa-edit fa-sm text-white-50 mr-2"></i> Modifier l'emploi du temps
             </button>
-        {% else %}
-            <div class="alert alert-warning py-1 mb-0">
-                <small>Mode consultation seulement</small>
-            </div>
         {% endif %}
     </div>
+    <div class="btn-group">
+        {% if user_profile.profil == 'admin' %}
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+        </a>
+        {% elif user_profile.profil == 'student' %}
+        <a href="{% url 'dashboard:student_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+        </a>
+        {% else %}
+        <a href="{% url 'dashboard:teacher_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+        </a>
+        {% endif %}
+    </div>
+</div>
+<div class="container-fluid">
 
     <!-- Emploi du temps directement visible -->
     <div class="card shadow mb-4">

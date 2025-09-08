@@ -2,16 +2,6 @@
 
 {% block content %}
 <div class="content">
-    <div>
-        <h2 class="mb-4 fw-bold text-primary"><i class="fas fa-user-graduate me-2"></i>
-            Tableau de Bord Admin
-          </h2>
-          
-        <ul class="breadcrumb">
-            <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
-        </ul>
-    </div>
-
     <!-- Dashboard Cards -->
     <div class="dashboard-cards">
         <div class="card stat-card">
@@ -32,28 +22,25 @@
                 </div>
             </div>
         </div>
-        <div class="card stat-card clickable-card"
-        onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
+        <div class="card stat-card clickable-card" >
+            <div class="stat-icon" style="background-color: #E91E63;">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <div class="stat-info">
+                <p>{{ module_count }} Modules</p>
 
+            </div>
+        </div>
+        <div class="card stat-card clickable-card"onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="stat-icon" style="background-color: #4CAF50;">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <div class="stat-info ml-3">
-                        <h5 class="mb-1">Emploi du temps</h5>
-                        <p class="text-muted mb-0">Gestion des plannings</p>
+                        <p class="text-muted mb-0">Voir l'emploi du temps</p>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:suggestions_list' %}'">
-            <div class="stat-icon" style="background-color: #E91E63;">
-                <i class="fas fa-lightbulb"></i>
-            </div>
-            <div class="stat-info">
-                <p>{{ new_contacts_count }} Suggestions</p>
-
             </div>
         </div>
     </div>
@@ -74,21 +61,13 @@
         </div>
         <div class="summary-container">
             <div class="summary-header">
-                <h3>Activités récentes</h3>
+                <h3>Informations Importantes</h3>
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             <div class="summary-content">
-                {% if request.user.is_superuser or profil.user == student%}
                 <!-- Informations pour les étudiants -->
                 <div class="info-section">
                     <div class="info-card-header">
-                        <h3>Informations pour les étudiants</h3>
-                        <div>
-                            <i class="fas fa-user-graduate info-icon"></i>
-                            <button class="btn-edit" onclick="toggleEdit('student')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
                     </div>
                     <div class="info-card-body">
                         <div class="form-group">
@@ -99,43 +78,8 @@
                             <label for="student_info_content">Contenu:</label>
                             <textarea class="form-control" id="student_info_content" rows="6" readonly>Les examens de fin de semestre auront lieu du 15 au 20 juin. Veuillez consulter le calendrier pour plus de détails sur les horaires et les salles.</textarea>
                         </div>
-                        <div class="action-buttons d-none" id="student_actions">
-                            <button type="button" class="btn btn-save" onclick="saveInfo('student')">Enregistrer</button>
-                            <button type="button" class="btn btn-cancel" onclick="cancelEdit('student')">Annuler</button>
-                            <button type="button" class="btn btn-delete" onclick="deleteInfo('student')">Supprimer</button>
-                        </div>
                     </div>
                 </div>
-                {% endif %}
-                {% if request.user.is_superuser or profil.user == teacher%}
-                <!-- Informations pour les enseignants -->
-                <div class="info-section">
-                    <div class="info-card-header">
-                        <h3>Informations pour les enseignants</h3>
-                        <div>
-                            <i class="fas fa-chalkboard-teacher info-icon"></i>
-                            <button class="btn-edit" onclick="toggleEdit('teacher')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="info-card-body">
-                        <div class="form-group">
-                            <label for="teacher_info_title">Titre:</label>
-                            <input type="text" class="form-control" id="teacher_info_title" value="Réunion pédagogique" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="teacher_info_content">Contenu:</label>
-                            <textarea class="form-control" id="teacher_info_content" rows="6" readonly>Une réunion pédagogique est prévue le vendredi 10 juin à 16h00 en salle des professeurs. Ordre du jour: préparation des examens de fin de semestre.</textarea>
-                        </div>
-                        <div class="action-buttons d-none" id="teacher_actions">
-                            <button type="button" class="btn btn-save" onclick="saveInfo('teacher')">Enregistrer</button>
-                            <button type="button" class="btn btn-cancel" onclick="cancelEdit('teacher')">Annuler</button>
-                            <button type="button" class="btn btn-delete" onclick="deleteInfo('teacher')">Supprimer</button>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>

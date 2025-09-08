@@ -9,10 +9,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages as django_messages
 from datetime import datetime,timedelta
 import calendar
-from accounts.models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo,TimetableEntry
+from accounts.models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo,TimetableEntry,Note
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.views.generic import TemplateView
+from chartjs.views.lines import BaseLineChartView
+from django.db.models import Avg
 
 
 
@@ -37,12 +39,13 @@ def home(request):
         return redirect('dashboard:student_dashboard')
     else:
         return render(request, 'accounts/login.html')
+def is_admin(user):
+    return user.is_authenticated and hasattr(user, 'profil') and user.profil == 'admin'
 
-# Les views de l'admin dashboard
+# ============ VUES DES TABLEAUX DE BOARD ============
 @login_required
 def admin_dashboard(request):
     """Tableau de bord pour les administrateurs"""
-    print(request.user.profil, "admin_dashboard")
     if not hasattr(request.user, 'profil') or request.user.profil != 'admin':
         django_messages.error(request, "Accès réservé aux administrateurs.")
         return redirect('accounts:login')
@@ -51,8 +54,8 @@ def admin_dashboard(request):
     context = {
         'title': 'Tableau de bord Administrateur',
         'user': request.user,
-        'student_count' : User.objects.filter(profil='student').count(),
-        'teacher_count' : User.objects.filter(profil='teacher').count(),
+        'student_count': User.objects.filter(profil='student').count(),
+        'teacher_count': User.objects.filter(profil='teacher').count(),
         'new_contacts_count': ContactMessage.objects.count(),
         'modules': Module.objects.all(),
         'teachers': Teacher.objects.all(),
@@ -60,9 +63,108 @@ def admin_dashboard(request):
         'week_days': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
         'student_info': InfoMessage.objects.filter(audience='student').first(),
         'teacher_info': InfoMessage.objects.filter(audience='teacher').first(),
+        'show_module_chart': True,  # ← Nouveau: Activer le graphique
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
 
+@login_required
+def teacher_dashboard(request):
+    """Tableau de bord pour les enseignants"""
+    if not request.user.is_teacher():
+        django_messages.error(request, "Accès réservé aux enseignants.")
+        return redirect('accounts:login')
+    
+    teacher_info = InfoMessage.objects.filter(audience='teacher').first()
+    
+    context = {
+        'title': 'Tableau de bord Enseignant',
+        'user': request.user,
+        'teacher_info': teacher_info,
+        'student_count': User.objects.filter(profil='student').count(),
+        'teacher_count': User.objects.filter(profil='teacher').count(),
+        'stats': {'total_students': Student.objects.count()},
+        'show_module_chart': True,  # ← Nouveau: Activer le graphique
+    }
+    
+    return render(request, 'dashboard/teacher_dashboard.html', context)
+
+@login_required
+def student_dashboard(request):
+    """Tableau de bord pour les élèves"""
+    if not request.user.is_student():
+        django_messages.error(request, "Accès réservé aux étudiants.")
+        return redirect('accounts:login')
+    
+    student_user = request.user
+    today = datetime.now()
+    week_start = today - timedelta(days=today.weekday())
+    week_str = week_start.strftime("%Y-%m-%d")
+    
+    timetable = Timetable.objects.filter(week=week_str).order_by('day', 'timeslot')
+    
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    schedule_dict = {day: {'8h-10h': None, '10h-12h': None, '14h-16h': None, '16h-18h': None} for day in days}
+    
+    for entry in timetable:
+        time_slot = entry.get_timeslot_display()
+        schedule_dict[entry.day][time_slot] = {
+            'module': entry.module,
+            'teacher': entry.teacher
+        }
+    
+    student_info = InfoMessage.objects.filter(audience='student').first()
+    
+    context = {
+        'title': 'Tableau de bord Élève',
+        'user': request.user,
+        'student_user': student_user,  
+        'student_info': student_info,
+        'schedule': schedule_dict,
+        'days': days,
+        'student_count': User.objects.filter(profil='student').count(),
+        'teacher_count': User.objects.filter(profil='teacher').count(),
+        'show_module_chart': True,  # ← Nouveau: Activer le graphique
+    }
+    
+    return render(request, 'dashboard/student_dashboard.html', context)
+# ============ VUES DE Graphe ============
+
+class ModuleAverageJSONView(BaseLineChartView):
+    def get_labels(self):
+        """Retourne les noms des modules pour l'axe X"""
+        from modules.models import Module
+        return list(Module.objects.values_list('name', flat=True))
+
+    def get_providers(self):
+        """Retourne le nom du dataset"""
+        return ["Moyenne des notes"]
+
+    def get_data(self):
+        """Retourne les données des moyennes pour chaque module"""
+        from modules.models import Module
+        averages = []
+        
+        for module in Module.objects.all():
+            # Calcul de la moyenne des notes pour ce module
+            avg_note = Note.objects.filter(
+                module=module
+            ).aggregate(avg=Avg('value'))['avg'] or 0
+            
+            averages.append(round(avg_note, 2) if avg_note else 0)
+        
+        return [averages]
+
+
+class ModuleChartView(TemplateView):
+    template_name = 'graphe/module_chart.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['chart_title'] = "Moyennes des notes par module"
+        return context
+
+
+# ============ VUES DE MODIFICATIONS ============
 @login_required
 @user_passes_test(lambda u: u.profil == 'admin')
 def update_student_info(request):
@@ -134,8 +236,10 @@ def get_students_by_class(request):
     
     return JsonResponse({'error': 'Class ID not provided'}, status=400)
 
+
+
+# ============ VUES DES SUGGESTIONS ============
 @login_required
-@user_passes_test(lambda u: u.profil == 'admin')
 def suggestions_list(request):
     """Vue pour afficher la liste des suggestions"""
     suggestions = ContactMessage.objects.all().order_by('-created_at')
@@ -155,7 +259,6 @@ def suggestions_list(request):
     return render(request, 'suggestions/suggestions.html', context)
 
 @login_required
-@user_passes_test(lambda u: u.profil == 'admin')
 def mark_suggestion_read(request, suggestion_id):
     """Marquer une suggestion comme lue"""
     # Correction: Utiliser ContactMessage au lieu de Suggestion
@@ -178,7 +281,6 @@ def delete_suggestion(request, suggestion_id):
     return redirect('dashboard:suggestions_list')
 
 @login_required
-@user_passes_test(lambda u: u.profil == 'admin')
 def get_suggestion_detail(request):
     """Récupérer les détails d'une suggestion (AJAX)"""
     suggestion_id = request.GET.get('suggestion_id')
@@ -198,103 +300,7 @@ def get_suggestion_detail(request):
     return JsonResponse({'error': 'Suggestion ID not provided'}, status=400)
 
 
-@login_required
-def teacher_dashboard(request):
-    """Tableau de bord pour les enseignants"""
-    print(request.user.profil, "teacher_dashboard")
-    if not hasattr(request.user, 'profil') or request.user.profil != 'teacher':
-        django_messages.error(request, "Accès réservé aux enseignants.")
-        return redirect('accounts:login')
-    
-    # Récupérer les informations de l'enseignant connecté
-    try:
-        teacher = Teacher.objects.get(user=request.user)
-    except Teacher.DoesNotExist:
-        django_messages.error(request, "Profil enseignant non trouvé.")
-        return redirect('accounts:login')
-    
-    # Récupérer les modules enseignés par cet enseignant
-    modules_taught = Module.objects.filter(teacher=teacher)
-    
-  
-    
-    # Récupérer les informations pour les enseignants
-    teacher_info = InfoMessage.objects.filter(audience='teacher').first()
-    
-    context = {
-        'title': 'Tableau de bord Enseignant',
-        'user': request.user,
-        'teacher': teacher,
-        'teacher_info': teacher_info,
-        'modules_taught': modules_taught,
-        'stats': {
-            'total_modules': modules_taught.count(),
-            'total_students': Student.objects.count(),
-        }
-    }
-    
-    return render(request, 'dashboard/teacher_dashboard.html', context)
-
-@login_required
-def student_dashboard(request):
-    """Tableau de bord pour les élèves"""
-    print(request.user.profil, "student_dashboard")
-    if not hasattr(request.user, 'profil') or request.user.profil != 'student':
-        django_messages.error(request, "Accès réservé aux étudiants.")
-        return redirect('accounts:login')
-    
-    # Récupérer les informations de l'étudiant connecté
-    try:
-        student = Student.objects.get(user=request.user)
-    except Student.DoesNotExist:
-        django_messages.error(request, "Profil étudiant non trouvé.")
-        return redirect('accounts:login')
-    
-
-    
-    # Récupérer l'emploi du temps de la classe
-    today = datetime.now()
-    week_start = today - datetime.timedelta(days=today.weekday())
-    week_str = week_start.strftime("%Y-%m-%d")
-    
-    timetable = Timetable.objects.filter(
-        week=week_str
-    ).order_by('day', 'timeslot')
-    
-    # Organiser l'emploi du temps par jour
-    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-    schedule_dict = {day: {'8h-10h': None, '10h-12h': None, '14h-16h': None, '16h-18h': None} for day in days}
-    
-    for entry in timetable:
-        time_slot = entry.get_timeslot_display()
-        schedule_dict[entry.day][time_slot] = {
-            'module': entry.module,
-            'teacher': entry.teacher
-        }
-    
-    # Récupérer les informations pour les étudiants
-    student_info = InfoMessage.objects.filter(audience='student').first()
-    
-
-    
-    context = {
-        'title': 'Tableau de bord Élève',
-        'user': request.user,
-        'student': student,
-        'student_info': student_info,
-        'schedule': schedule_dict,
-        'days': days,
-    }
-    
-    return render(request, 'dashboard/student_dashboard.html', context)
-
-def is_admin(user):
-    return user.profil == 'admin'
-
-#les views de planning
-def is_admin(user):
-    return user.is_authenticated and hasattr(user, 'profil') and user.profil == 'admin'
-
+# ============ VUES DU PLANNING ============
 @login_required
 @login_required
 def timetable_view(request):

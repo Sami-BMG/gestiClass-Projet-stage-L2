@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ chart_title }}</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <canvas id="moduleChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch("{% url 'module_chart_data' %}")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('moduleChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: data.providers[0],
+                        data: data.datasets[0],
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 20,
+                            title: {
+                                display: true,
+                                text: 'Moyenne (/20)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Modules'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Moyennes des notes par module'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading chart data:', error));
+});
+</script>
+{% endblock %}
