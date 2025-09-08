@@ -2,16 +2,6 @@
 
 {% block content %}
 <div class="content">
-    <div>
-        <h2 class="mb-4 fw-bold text-primary"><i class="fas fa-user-graduate me-2"></i>
-            Tableau de Bord Admin
-          </h2>
-          
-        <ul class="breadcrumb">
-            <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
-        </ul>
-    </div>
-
     <!-- Dashboard Cards -->
     <div class="dashboard-cards">
         <div class="card stat-card">
@@ -38,8 +28,10 @@
             </div>
             <div class="stat-info">
                 <p>{{ module_count }} Modules</p>
+
             </div>
-        <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
+        </div>
+        <div class="card stat-card clickable-card"onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="stat-icon" style="background-color: #4CAF50;">
@@ -88,12 +80,10 @@
                         </div>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
-
 <style>
     /* Styles généraux */
     .content {

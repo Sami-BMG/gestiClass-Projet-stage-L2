@@ -11,6 +11,11 @@
                 <li>Informations</li>
             </ul>
         </div>
+        <div class="btn-group">
+            <a href="{% url 'accounts:contact' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+            </a>
+        </div>
     </div>
 
     <div class="row">
@@ -118,7 +123,7 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="tel:{{ school_info.phone|default:'+212XXXXXXXXX' }}" class="btn btn-outline-primary">
+                        <a href="tel:{{ school_info.phone|default:'+226XXXXXXXXX' }}" class="btn btn-outline-primary">
                             <i class="fas fa-phone me-1"></i> Appeler
                         </a>
                         <a href="mailto:{{ school_info.email|default:'contact@ecole.ma' }}" class="btn btn-outline-success">

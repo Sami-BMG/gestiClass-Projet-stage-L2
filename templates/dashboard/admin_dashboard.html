@@ -1,4 +1,5 @@
 {% extends 'models/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="content">
@@ -61,14 +62,12 @@
     <div class="charts">
         <div class="chart-container">
             <div class="chart-header">
-                <h3>Statistiques des étudiants</h3>
+                <h3>Moyennes des notes par module</h3>
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             <div class="chart-content">
-                <!-- Placeholder for chart -->
-                <div style="height: 300px; background-color: #f5f7fb; display: flex; justify-content: center; align-items: center; border-radius: 5px;">
-                    <p>Graphique des statistiques des étudiants</p>
-                </div>
+                <!-- Graphique des moyennes par module -->
+                <canvas id="moduleChart" height="300"></canvas>
             </div>
         </div>
         <div class="summary-container">
@@ -450,6 +449,9 @@
     }
 </style>
 
+<!-- Ajouter le script Chart.js dans le head de base.html ou ici -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     // Stocker les valeurs originales pour l'annulation
     let originalValues = {};
@@ -554,7 +556,56 @@
         }
     }
     
+    // Script pour charger le graphique
     document.addEventListener('DOMContentLoaded', function() {
+        // Charger les données du graphique
+        fetch("{% url 'dashboard:module_chart_data' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('moduleChart').getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: data.providers[0],
+                            data: data.datasets[0],
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 20,
+                                title: {
+                                    display: true,
+                                    text: 'Moyenne (/20)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Modules'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Moyennes des notes par module'
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading chart data:', error));
+
         // Simulation du chargement des étudiants lorsqu'une classe est sélectionnée
         const classSelect = document.getElementById('class_select');
         if (classSelect) {

@@ -28,7 +28,7 @@ urlpatterns = [
     #path('timetable/clear/', views.clear_timetable, name='clear_timetable'),
     
     #urls du graphe
-    path('module-chart-data/', views.ModuleAverageJSONView.as_view(), name='module_chart_data'),
-    path('module-chart/', views.ModuleChartView.as_view(), name='module_chart'),
+    path('module-chart-data/', views.module_chart_data, name='module_chart_data'),
+
 
 ]
