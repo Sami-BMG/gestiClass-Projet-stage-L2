@@ -631,21 +631,26 @@ def delete_module(request, module_id):
 @login_required
 def results_list(request):
     """Vue pour afficher tous les résultats avec filtres"""
-    results = Result.objects.all().select_related('student', 'module')
+    # Si l'utilisateur est un étudiant, ne montrer que ses propres résultats
+    if request.user.profil == 'student' and not request.user.is_staff and not request.user.is_superuser:
+        results = Result.objects.filter(student=request.user).select_related('student', 'module')
+        students = User.objects.filter(id=request.user.id)  # Seulement l'étudiant lui-même
+    else:
+        results = Result.objects.all().select_related('student', 'module')
+        students = User.objects.filter(profil='student')
     
-    # Filtres
+    # Filtres (uniquement pour admin/staff)
     student_id = request.GET.get('student')
     module_id = request.GET.get('module')
     semester = request.GET.get('semester')
     
-    if student_id:
+    if student_id and (request.user.is_staff or request.user.is_superuser):
         results = results.filter(student_id=student_id)
     if module_id:
         results = results.filter(module_id=module_id)
     if semester:
         results = results.filter(semester=semester)
     
-    students = User.objects.filter(profil='student')
     modules = Module.objects.all()
     
     semesters = [
@@ -666,7 +671,7 @@ def results_list(request):
         'selected_module': module_id,
         'selected_semester': semester,
         'is_admin': request.user.is_superuser,
-        'title': 'Gestion des Résultats'
+        'title': 'Gestion des Résultats' if (request.user.is_staff or request.user.is_superuser) else 'Mes Résultats'
     }
     return render(request, 'results/results_list.html', context)
 
@@ -674,6 +679,10 @@ def results_list(request):
 @login_required
 def student_results(request, student_id):
     """Vue pour afficher les résultats d'un étudiant spécifique"""
+    # Vérifier que l'étudiant peut seulement voir ses propres résultats
+    if request.user.profil == 'student' and str(request.user.id) != str(student_id):
+        raise PermissionDenied("Vous ne pouvez accéder qu'à vos propres résultats.")
+    
     student = get_object_or_404(User, id=student_id, profil='student')
     results = Result.objects.filter(student=student).select_related('module')
     
@@ -701,6 +710,8 @@ def student_results(request, student_id):
         'title': f'Résultats de {student.get_full_name()}'
     }
     return render(request, 'results/student_results.html', context)
+
+
 
 @login_required
 def module_results(request, module_id):
@@ -846,9 +857,14 @@ def export_results(request):
     return response
 
 
+
 @login_required
 def generate_bulletin(request, student_id):
     """Vue pour générer le bulletin d'un étudiant"""
+    # Vérifier que l'étudiant peut seulement voir son propre bulletin
+    if request.user.profil == 'student' and str(request.user.id) != str(student_id):
+        raise PermissionDenied("Vous ne pouvez accéder qu'à vos propres résultats.")
+    
     student = get_object_or_404(User, id=student_id, profil='student')
     results = Result.objects.filter(student=student).select_related('module')
     

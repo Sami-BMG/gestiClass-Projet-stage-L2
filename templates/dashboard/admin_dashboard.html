@@ -3,14 +3,13 @@
 
 {% block content %}
 <div class="content">
-    <div>
-        <h2 class="mb-4 fw-bold text-primary"><i class="fas fa-user-graduate me-2"></i>
-            Tableau de Bord Admin
-          </h2>
-          
-        <ul class="breadcrumb">
-            <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
-        </ul>
+    <div class="card shadow mb-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <h1>     <h1>Bonjour {{ user.first_name }} !</h1>
+                <h3>Vous êtes dans la page d'administration de GestiClass. </h3>
+            </div>
+        </div>
     </div>
 
     <!-- Dashboard Cards -->
@@ -70,10 +69,6 @@
             </div>
         </div>
         <div class="summary-container">
-            <div class="summary-header">
-                <h3>Activités récentes</h3>
-                <i class="fas fa-ellipsis-v"></i>
-            </div>
             <div class="summary-content">
                 {% if request.user.is_superuser or request.user.profil == 'student' %}
                 <!-- Informations pour les étudiants -->
