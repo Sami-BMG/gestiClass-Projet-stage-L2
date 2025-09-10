@@ -1,8 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
-from .views import CustomPasswordResetView, CustomPasswordResetDoneView, CustomPasswordResetConfirmView, CustomPasswordResetCompleteView
-
+from .views import CustomPasswordResetView, CustomPasswordResetDoneView, CustomPasswordResetConfirmView, CustomPasswordResetCompleteView, assign_student_role,assign_teacher_role
 app_name = 'accounts'
 
 urlpatterns = [
@@ -117,10 +116,16 @@ urlpatterns = [
          name='profile'),
 
      #url pour le bulletin en PDF
-     path('results/bulletin/<int:student_id>/', views.generate_bulletin,
+    path('results/bulletin/<int:student_id>/', views.generate_bulletin,
           name='generate_bulletin'),
 
 
+          #url pour les roles 
+    path('roles/', views.role_list, name='role_list'),
+    path('roles/<int:role_id>/edit/', views.edit_role, name='edit_role'),
+    path('roles/<int:role_id>/delete/', views.delete_role, name='delete_role'),
+    path('students/<int:user_id>/assign-role/', views.assign_student_role, name='assign_student_role'),
+    path('teachers/<int:user_id>/assign-role/', views.assign_teacher_role, name='assign_teacher_role'),
     
 ]    
         

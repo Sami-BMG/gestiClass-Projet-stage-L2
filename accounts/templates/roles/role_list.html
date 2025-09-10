@@ -1,0 +1,230 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-user-tag me-2"></i>Gestion des Rôles et Permissions</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li>Administration</li>
+                <li>Rôles et Permissions</li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+                <i class="fas fa-plus me-1"></i> Nouveau Rôle
+            </button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Formulaire de création de rôle -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0"><i class="fas fa-plus-circle me-2"></i>Créer un Nouveau Rôle</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label fw-bold">Nom du rôle</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Permissions</label>
+                            <div class="form-text mb-2">Sélectionnez les permissions pour ce rôle (Ctrl+clic pour multiple)</div>
+                            {{ form.permissions }}
+                            {% if form.permissions.errors %}
+                            <div class="text-danger">{{ form.permissions.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Créer le Rôle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Guide des permissions -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="m-0"><i class="fas fa-info-circle me-2"></i>Guide des Permissions</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <strong>add_</strong> : Permission d'ajouter<br>
+                        <strong>change_</strong> : Permission de modifier<br>
+                        <strong>delete_</strong> : Permission de supprimer<br>
+                        <strong>view_</strong> : Permission de visualiser
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des rôles existants -->
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="m-0"><i class="fas fa-list me-2"></i>Rôles Existants ({{ groups.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if groups %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nom du rôle</th>
+                                    <th>Permissions</th>
+                                    <th>Utilisateurs</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for group in groups %}
+                                <tr>
+                                    <td>
+                                        <strong class="text-primary">{{ group.name }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if group.permissions.all %}
+                                        <div class="permission-list">
+                                            {% for perm in group.permissions.all|slice:":3" %}
+                                            <span class="badge bg-secondary mb-1" data-bs-toggle="tooltip" title="{{ perm.name }}">
+                                                {{ perm.codename }}
+                                            </span>
+                                            {% endfor %}
+                                            {% if group.permissions.count > 3 %}
+                                            <span class="badge bg-light text-dark" data-bs-toggle="tooltip" title="{% for perm in group.permissions.all %}{{ perm.codename }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                                                +{{ group.permissions.count|add:"-3" }} plus
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">Aucune permission</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ group.user_set.count }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'accounts:edit_role' group.id %}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if group.user_set.count == 0 %}
+                                            <a href="{% url 'accounts:delete_role' group.id %}" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            {% else %}
+                                            <button class="btn btn-outline-secondary" disabled data-bs-toggle="tooltip" title="Impossible de supprimer (utilisateurs associés)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Aucun rôle n'a été créé pour le moment.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Statistiques</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 class="text-primary">{{ groups.count }}</h4>
+                            <small class="text-muted">Rôles</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-success">{{ total_permissions }}</h4>
+                            <small class="text-muted">Permissions totales</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-info">{{ total_users }}</h4>
+                            <small class="text-muted">Utilisateurs avec rôles</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.permission-list {
+    max-width: 200px;
+}
+.badge {
+    font-size: 0.7em;
+}
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+.form-select {
+    height: auto;
+    min-height: 200px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Activation des tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+
+// Filtrer les permissions par catégorie
+function filterPermissions(category) {
+    const options = document.querySelectorAll('#id_permissions option');
+    options.forEach(option => {
+        if (category === 'all' || option.textContent.includes(category)) {
+            option.style.display = 'block';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

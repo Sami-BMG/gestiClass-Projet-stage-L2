@@ -14,6 +14,11 @@
             
             <li><a href="{% url 'accounts:modules_list' %}"><i class="fas fa-book"></i> Modules</a></li>
             <li><a href="{% url 'accounts:results_list' %}"><i class="fas fa-chart-bar"></i> Résulats</a></li>
+
+            {% if user.profil == 'teacher' or user.profil == 'admin' or user.is_staff  %}
+            <li><a href="{% url 'accounts:role_list' %}"><i class="fas fa-user-shield"></i> Roles</a></li>
+            {% endif %}
+
             <li><a href="{% url 'accounts:contact' %}"><i class="fas fa-address-book"></i> Contacts</a></li>
         </ul>
     </div>  

@@ -5,7 +5,7 @@
 <div class="content">
     <div class="page-title">
         <div>
-            <h2><i class="fas fa-user-graduate me-2"></i>Gestion des Élèves</h2>
+            <h2><i class="fas fa-user-graduate me-2"></i>Élèves</h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
                 <li>Élèves</li>
@@ -85,7 +85,10 @@
                                        title="Modifier">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
-                                    
+                                    <a href="{% url 'accounts:assign_student_role' user.id %}" 
+                                    class="btn btn-sm btn-outline-info" title="Gérer le rôle">
+                                        <i class="fas fa-user-tag"></i>
+                                    </a>
                                     <!-- Bouton Supprimer (visible seulement pour les admins) -->
                                     <button class="btn btn-outline-danger btn-sm" 
                                             data-bs-toggle="modal" 

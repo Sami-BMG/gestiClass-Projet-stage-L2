@@ -1,0 +1,166 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-user-graduate me-2"></i>Attribution de Rôle à un Étudiant</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li><a href="{% url 'accounts:students_list' %}">Étudiants</a></li>
+                <li>Attribution de rôle</li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'accounts:students_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour aux étudiants
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne de gauche - Informations étudiant -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white text-center">
+                    <h5 class="m-0">Profil de l'étudiant</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if user.student.photo %}
+                        <img src="{{ user.student.photo.url }}" 
+                             class="img-fluid rounded-circle mb-3" 
+                             alt="Photo de {{ user.get_full_name }}"
+                             style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'img/default-avatar.png' %}" 
+                             class="img-fluid rounded-circle mb-3" 
+                             alt="Photo par défaut"
+                             style="width: 150px; height: 150px; object-fit: cover;">
+                    {% endif %}
+                    
+                    <h4 class="text-success">{{ user.get_full_name }}</h4>
+                    <p class="text-muted">@{{ user.username }}</p>
+                    
+                    <div class="d-grid gap-2">
+                        <span class="badge bg-success">Étudiant</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rôle actuel -->
+            <div class="card shadow mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="m-0"><i class="fas fa-user-tag me-1"></i>Rôle Actuel</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if user.groups.all %}
+                        {% for group in user.groups.all %}
+                        <span class="badge bg-primary p-2 mb-2" style="font-size: 1rem;">
+                            <i class="fas fa-shield-alt me-1"></i>{{ group.name }}
+                        </span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">Aucun rôle attribué</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne de droite - Attribution de rôle -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0"><i class="fas fa-shield-alt me-2"></i>Attribution d'un Rôle</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Sélectionnez un rôle à attribuer à cet étudiant. Les rôles déterminent les permissions d'accès aux différentes fonctionnalités.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="role" class="form-label fw-bold text-primary">Sélectionner un rôle :</label>
+                            <select class="form-select form-select-lg" id="role" name="role" required>
+                                <option value="">Choisir un rôle...</option>
+                                {% for role in available_roles %}
+                                <option value="{{ role.id }}">{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Le rôle sélectionné remplacera le rôle actuel de l'étudiant.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounts:students_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Attribuer le rôle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Liste des rôles disponibles -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="m-0"><i class="fas fa-list me-2"></i>Rôles Disponibles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for role in available_roles %}
+                        <div class="col-md-6 mb-3">
+                            <div class="role-card p-3 border rounded">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-soft-primary rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-shield-alt text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">{{ role.name }}</h6>
+                                        <small class="text-muted">{{ role.user_set.count }} utilisateur(s)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.role-card {
+    transition: all 0.3s ease;
+}
+
+.role-card:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+}
+
+.form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.3s;
+}
+
+.form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+</style>
+{% endblock %}

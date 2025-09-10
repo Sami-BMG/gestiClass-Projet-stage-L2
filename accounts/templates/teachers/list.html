@@ -85,6 +85,10 @@
                                        title="Modifier">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
+                                    <a href="{% url 'accounts:assign_teacher_role' user.id %}" 
+                                    class="btn btn-sm btn-outline-info" title="Gérer le rôle">
+                                        <i class="fas fa-user-tag"></i>
+                                    </a>
                                     
                                     <!-- Bouton Supprimer (visible seulement pour les admins) -->
                                     <button class="btn btn-outline-danger btn-sm" 

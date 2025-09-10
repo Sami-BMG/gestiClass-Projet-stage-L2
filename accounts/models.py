@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
+    
+
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Administrateur'),
@@ -18,6 +20,10 @@ class User(AbstractUser):
     specialty = models.CharField(max_length=100, null=True, blank=True)
     hire_date = models.DateField(null=True, blank=True)
     address = models.TextField(blank=True)
+    is_student = models.BooleanField(default=False)
+    is_teacher = models.BooleanField(default=False)
+    phone_number = models.CharField(max_length=15, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
     
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.username})"
@@ -33,11 +39,18 @@ class User(AbstractUser):
     
     def get_type(self):
         return self.profil
+    
+    
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     student_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
     enrollment_date = models.DateField(default=timezone.now)
+    
+    class Meta:
+        permissions = [
+            ("can_assign_roles", "Peut assigner des rôles aux utilisateurs"),
+        ]
     
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} ({self.student_id})"

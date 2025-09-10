@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, update_session_auth_hash, logout
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required, user_passes_test,permission_required
 from django.contrib import messages
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.urls import reverse_lazy
@@ -17,10 +17,15 @@ import csv
 from io import StringIO
 import secrets
 import string
-
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm,AssignRoleForm,RoleForm
 from .models import Result, Module, User, ContactMessage, FAQ, SchoolInfo
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User, Group, Permission
+from django import forms
 
+
+
+User = get_user_model()
 
 # ============ FONCTIONS UTILITAIRES ============
 def send_login_email(user, password):
@@ -168,10 +173,194 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
         return super().get(request, *args, **kwargs)
 
 
+
+# ============ VUES POUR LES ROLES ============
+
+
+class RoleForm(forms.Form):
+    name = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nom du rôle (ex: Délégué, Enseignant, etc.)'
+        })
+    )
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-select',
+            'size': '10'
+        })
+    )
+
+@login_required
+@permission_required(['auth.view_group', 'auth.add_group', 'auth.change_group'], raise_exception=True)
+def role_list(request):
+    """Affiche la liste de tous les rôles existants avec possibilité de création"""
+    groups = Group.objects.all().prefetch_related('permissions')
+    
+    if request.method == 'POST':
+        form = RoleForm(request.POST)
+        if form.is_valid():
+            role_name = form.cleaned_data['name']
+            permissions = form.cleaned_data['permissions']
+            
+            # Créer le nouveau rôle
+            new_role, created = Group.objects.get_or_create(name=role_name)
+            
+            # Ajouter les permissions sélectionnées
+            if permissions:
+                new_role.permissions.set(permissions)
+            
+            if created:
+                messages.success(request, f'Rôle "{role_name}" créé avec succès!')
+            else:
+                messages.warning(request, f'Rôle "{role_name}" existe déjà et a été mis à jour!')
+            
+            return redirect('accounts:role_list')
+    else:
+        form = RoleForm()
+    
+    # Récupérer toutes les permissions par catégorie
+    permissions_by_category = {}
+    for perm in Permission.objects.all():
+        app_label = perm.content_type.app_label
+        if app_label not in permissions_by_category:
+            permissions_by_category[app_label] = []
+        permissions_by_category[app_label].append(perm)
+    
+    context = {
+        'groups': groups,
+        'form': form,
+        'permissions_by_category': permissions_by_category,
+        'groups': groups,
+        'total_permissions': Permission.objects.count(),
+        'total_users': User.objects.filter(groups__isnull=False).count(),
+        'title': 'Gestion des Rôles et Permissions'
+    }
+    return render(request, 'roles/role_list.html', context)
+
+@login_required
+@permission_required('auth.change_group', raise_exception=True)
+def edit_role(request, role_id):
+    """Modifier un rôle existant"""
+    role = get_object_or_404(Group, id=role_id)
+    
+    if request.method == 'POST':
+        form = RoleForm(request.POST)
+        if form.is_valid():
+            role_name = form.cleaned_data['name']
+            permissions = form.cleaned_data['permissions']
+            
+            # Mettre à jour le nom du rôle
+            if role.name != role_name:
+                role.name = role_name
+                role.save()
+            
+            # Mettre à jour les permissions
+            role.permissions.set(permissions)
+            
+            messages.success(request, f'Rôle "{role_name}" modifié avec succès!')
+            return redirect('accounts:role_list')
+    else:
+        # Pré-remplir le formulaire avec les données actuelles
+        form = RoleForm(initial={
+            'name': role.name,
+            'permissions': role.permissions.all()
+        })
+    
+    permissions_by_category = {}
+    for perm in Permission.objects.all():
+        app_label = perm.content_type.app_label
+        if app_label not in permissions_by_category:
+            permissions_by_category[app_label] = []
+        permissions_by_category[app_label].append(perm)
+    
+    context = {
+        'form': form,
+        'role': role,
+        'permissions_by_category': permissions_by_category,
+        'title': f'Modifier le rôle {role.name}'
+    }
+    return render(request, 'roles/edit_role.html', context)
+
+@login_required
+@permission_required('auth.delete_group', raise_exception=True)
+def delete_role(request, role_id):
+    """Supprimer un rôle"""
+    role = get_object_or_404(Group, id=role_id)
+    
+    if request.method == 'POST':
+        role_name = role.name
+        role.delete()
+        messages.success(request, f'Rôle "{role_name}" supprimé avec succès!')
+        return redirect('accounts:role_list')
+    
+    context = {
+        'role': role,
+        'title': f'Supprimer le rôle {role.name}'
+    }
+    return render(request, 'roles/delete_role.html', context)
+
+@login_required
+@permission_required('auth.change_user', raise_exception=True)
+def assign_student_role(request, user_id):
+    """Attribuer un rôle à un étudiant"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        role_id = request.POST.get('role')
+        if role_id:
+            role = get_object_or_404(Group, id=role_id)
+            user.groups.clear()
+            user.groups.add(role)
+            messages.success(request, f'Rôle "{role.name}" attribué à {user.username} avec succès!')
+            return redirect('accounts:role_list')
+        else:
+            messages.error(request, 'Veuillez sélectionner un rôle.')
+    
+    available_roles = Group.objects.all()
+    
+    context = {
+        'user': user,
+        'available_roles': available_roles,
+        'title': f'Attribuer un rôle à {user.username}'
+    }
+    return render(request, 'roles/assign_student_role.html', context)
+
+@login_required
+@permission_required('auth.change_user', raise_exception=True)
+def assign_teacher_role(request, user_id):
+    """Attribuer un rôle à un enseignant"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        role_id = request.POST.get('role')
+        if role_id:
+            role = get_object_or_404(Group, id=role_id)
+            user.groups.clear()
+            user.groups.add(role)
+            messages.success(request, f'Rôle "{role.name}" attribué à {user.username} avec succès!')
+            return redirect('accounts:role_list')
+        else:
+            messages.error(request, 'Veuillez sélectionner un rôle.')
+    
+    available_roles = Group.objects.all()
+    
+    context = {
+        'user': user,
+        'available_roles': available_roles,
+        'title': f'Attribuer un rôle à {user.username}'
+    }
+    return render(request, 'roles/assign_teacher_role.html', context)
+
 # ============ VUES POUR LA GESTION DES ÉLÈVES ============
 @login_required
 def list_students(request):
     """Vue pour lister les élèves - Accessible à tous les utilisateurs connectés"""
+    User = get_user_model()
     students = User.objects.filter(profil='student')
     is_admin_user = hasattr(request.user, 'profil') and request.user.profil == 'admin'
     
