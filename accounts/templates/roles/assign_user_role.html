@@ -1,0 +1,216 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2>
+                <i class="fas {% if user_type == 'student' %}fa-user-graduate{% else %}fa-chalkboard-teacher{% endif %} me-2"></i>
+                Attribution de Rôle à {{ user.username }}
+            </h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li><a href="{% url 'accounts:'|add:user_type|add:'s_list' %}">
+                    {% if user_type == 'student' %}Étudiants{% else %}Enseignants{% endif %}
+                </a></li>
+                <li>Attribution de rôle</li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'accounts:'|add:user_type|add:'s_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Colonne de gauche - Informations utilisateur -->
+        <div class="col-md-4 mb-4">
+            <!-- Informations utilisateur -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0"><i class="fas fa-user me-1"></i>
+                        Informations {% if user_type == 'student' %}Étudiant{% else %}Enseignant{% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="avatar-lg bg-soft-primary rounded-circle mx-auto d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-user text-primary fs-2"></i>
+                        </div>
+                        <h5>{{ user.get_full_name|default:user.username }}</h5>
+                        <p class="text-muted">{{ user.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rôle actuel -->
+            <div class="card shadow mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="m-0"><i class="fas fa-user-tag me-1"></i>Rôle(s) Actuel(s)</h6>
+                </div>
+                <div class="card-body">
+                    {% if user.groups.all %}
+                        {% for group in user.groups.all %}
+                        <div class="d-flex align-items-center justify-content-between mb-2 p-2 bg-light rounded">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shield-alt text-primary me-2"></i>
+                                <span class="fw-bold">{{ group.name }}</span>
+                            </div>
+                            <!-- Bouton pour ouvrir le modal de confirmation -->
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#confirmRemoveModal"
+                                    data-role-id="{{ group.id }}" data-role-name="{{ group.name }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                            <p>Aucun rôle attribué</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne de droite - Attribution de rôle -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0"><i class="fas fa-shield-alt me-2"></i>Gestion des Rôles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Sélectionnez un rôle à attribuer ou modifiez le rôle actuel de cet 
+                        {% if user_type == 'student' %}étudiant{% else %}enseignant{% endif %}.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="role" class="form-label fw-bold text-primary">Sélectionner un rôle :</label>
+                            <select class="form-select form-select-lg" id="role" name="role">
+                                <option value="">-- Choisissez un rôle --</option>
+                                {% for role in available_roles %} 
+                                <option value="{{ role.id }}" {% if role in user.groups.all %}selected{% endif %}>
+                                    {{ role.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Sélectionnez un rôle à attribuer ou choisissez "Aucun rôle" pour retirer le rôle actuel.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounts:'|add:user_type|add:'s_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn {% if user_type == 'student' %}btn-success{% else %}btn-warning{% endif %}">
+                                <i class="fas fa-save me-1"></i> Appliquer
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Liste des rôles disponibles -->
+                    <div class="mt-4">
+                        <h6 class="text-primary mb-3"><i class="fas fa-list me-2"></i>Rôles Disponibles</h6>
+                        <div class="row">
+                            {% for role in available_roles %}
+                            <div class="col-md-6 mb-3">
+                                <div class="role-card p-3 border rounded {% if role in user.groups.all %}{% if user_type == 'student' %}border-primary bg-soft-primary{% else %}border-warning bg-soft-warning{% endif %}{% endif %}">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm {% if user_type == 'student' %}bg-soft-primary{% else %}bg-soft-warning{% endif %} rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-shield-alt {% if user_type == 'student' %}text-primary{% else %}text-warning{% endif %}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{{ role.name }}</h6>
+                                            <small class="text-muted">{{ role.user_set.count }} utilisateur(s)</small>
+                                        </div>  
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-dark" id="confirmRemoveModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmation de retrait
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir retirer le rôle <strong id="roleName"></strong> de l'utilisateur <strong>{{ user.username }}</strong> ?</p>
+                <p class="text-muted">Cette action ne peut pas être annulée.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Annuler
+                </button>
+                <form id="removeRoleForm" method="post" action="{% url 'accounts:remove_user_role' user.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="role_id" id="modalRoleId" value="{{role.id}}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Confirmer le retrait
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Script pour gérer le modal de confirmation
+    document.addEventListener('DOMContentLoaded', function() {
+        var confirmRemoveModal = document.getElementById('confirmRemoveModal');
+        
+        confirmRemoveModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Bouton qui a déclenché le modal
+            var roleId = button.getAttribute('data-role-id');
+            var roleName = button.getAttribute('data-role-name');
+            
+            // Mettre à jour le contenu du modal
+            var modalBodyRoleName = confirmRemoveModal.querySelector('#roleName');
+            var modalRoleInput = confirmRemoveModal.querySelector('#modalRoleId');
+            
+            modalBodyRoleName.textContent = roleName;
+            modalRoleInput.value = roleId;
+        });
+    });
+</script>
+{% endblock %}

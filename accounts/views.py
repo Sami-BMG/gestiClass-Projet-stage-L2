@@ -307,63 +307,73 @@ def delete_role(request, role_id):
 
 @login_required
 @permission_required('auth.change_user', raise_exception=True)
-def assign_student_role(request, student_id):
-    student = get_object_or_404(User, id=student_id, profil='student')
+def assign_user_role(request, user_id, user_type):
+    """Attribuer un rôle à un utilisateur spécifique (étudiant ou enseignant)"""
     
-    if request.method == 'POST':
-        role_ids = request.POST.getlist('roles')  # Pour plusieurs sélections
-        if role_ids:
-            student.groups.clear()
-            for role_id in role_ids:
-                role = get_object_or_404(Group, id=role_id)
-                student.groups.add(role)
-            messages.success(request, f'Rôles attribués à {student.username} avec succès!')
-        else:
-            student.groups.clear()
-            messages.success(request, f'Tous les rôles ont été retirés de {student.username}!')
-        
-        return redirect('accounts:assign_student_role', student_id=student_id)
+    # Validation du type d'utilisateur
+    if user_type not in ['student', 'teacher']:
+        messages.error(request, 'Type d\'utilisateur non valide.')
+        return redirect('dashboard:home')
     
-    available_roles = Group.objects.all()
-    
-    context = {
-        'student': student,
-        'available_roles': available_roles,
-        'title': f'Attribuer des rôles à {student.username}'
-    }
-    return render(request, 'roles/assign_student_role.html', context)
-
-
-
-@login_required
-@permission_required('auth.change_user', raise_exception=True)
-def assign_teacher_role(request, teacher_id):
-    """Attribuer un rôle à un enseignant spécifique"""
-    # Correction : ajouter le teacher_id dans la requête
-    teacher = get_object_or_404(User, id=teacher_id, profil='teacher')
+    # Récupération de l'utilisateur avec vérification du profil
+    user = get_object_or_404(User, id=user_id, profil=user_type)
     
     if request.method == 'POST':
         role_id = request.POST.get('role')
         if role_id:
             role = get_object_or_404(Group, id=role_id)
-            teacher.groups.clear()
-            teacher.groups.add(role)
-            messages.success(request, f'Rôle "{role.name}" attribué à {teacher.username} avec succès!')
-            return redirect('accounts:assign_teacher_role', teacher_id=teacher_id)
+            user.groups.clear()
+            user.groups.add(role)
+            messages.success(request, f'Rôle "{role.name}" attribué à {user.username} avec succès!')
         else:
             # Option pour retirer le rôle si aucun n'est sélectionné
-            teacher.groups.clear()
-            messages.success(request, f'Tous les rôles ont été retirés de {teacher.username}!')
-            return redirect('accounts:assign_teacher_role', teacher_id=teacher_id)
+            user.groups.clear()
+            messages.success(request, f'Tous les rôles ont été retirés de {user.username}!')
+        
+        return redirect('accounts:assign_user_role', user_id=user_id, user_type=user_type)
     
     available_roles = Group.objects.all()
     
     context = {
-        'teacher': teacher,
+        'user': user,  # Variable commune pour les deux types
+        'user_type': user_type,
         'available_roles': available_roles,
-        'title': f'Attribuer un rôle à {teacher.username}'
+        'title': f'Attribuer un rôle à {user.username}'
     }
-    return render(request, 'roles/assign_teacher_role.html', context)
+    
+    # Utiliser le template unique
+    return render(request, 'roles/assign_user_role.html', context)
+
+
+@login_required
+@permission_required('auth.change_user', raise_exception=True)
+def remove_user_role(request, user_id):
+    """Retirer un rôle spécifique d'un utilisateur (étudiant ou enseignant)"""
+    user = get_object_or_404(User, id=user_id)
+    
+    # Vérifier que l'utilisateur est bien un étudiant ou enseignant
+    if user.profil not in ['student', 'teacher']:
+        messages.error(request, 'Utilisateur non autorisé.')
+        return redirect('dashboard:home')
+        
+        
+    user_type = user.profil  # Cette ligne était manquante
+
+    
+    if request.method == 'POST':
+        role_id = request.POST.get('role_id')
+        if role_id:
+            try:
+                role = Group.objects.get(id=role_id)
+                user.groups.clear()
+                messages.success(request, f'Rôle "{role.name}" retiré de {user.username} avec succès!')
+            except Group.DoesNotExist:
+                messages.error(request, 'Rôle non trouvé.')
+        else:
+            messages.error(request, 'Aucun rôle spécifié pour le retrait.')   
+        return redirect('accounts:assign_user_role', user_type=user_type, user_id=user_id)
+
+
 
 
 # ============ VUES POUR LA GESTION DES ÉLÈVES ============

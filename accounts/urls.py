@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
-from .views import CustomPasswordResetView, CustomPasswordResetDoneView, CustomPasswordResetConfirmView, CustomPasswordResetCompleteView, assign_student_role,assign_teacher_role
+from .views import CustomPasswordResetView, CustomPasswordResetDoneView, CustomPasswordResetConfirmView, CustomPasswordResetCompleteView, assign_user_role
 app_name = 'accounts'
 
 urlpatterns = [
@@ -124,8 +124,7 @@ urlpatterns = [
     path('roles/', views.role_list, name='role_list'),
     path('roles/<int:role_id>/edit/', views.edit_role, name='edit_role'),
     path('roles/<int:role_id>/delete/', views.delete_role, name='delete_role'),
-    path('assign-role/<int:student_id>/', views.assign_student_role, name='assign_student_role'),
-    path('assign-teacher-role/<int:teacher_id>/', views.assign_teacher_role, name='assign_teacher_role'),
-    
+    path('user/<str:user_type>/<int:user_id>/assign-role/', views.assign_user_role, name='assign_user_role'),
+    path('user/<int:user_id>/remove-role/', views.remove_user_role, name='remove_user_role'),    
 ]    
         
