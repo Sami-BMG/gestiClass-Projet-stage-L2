@@ -12,7 +12,6 @@ class User(AbstractUser):
         ('teacher', 'Enseignant'),
         ('student', 'Élève'),
     )
-    
     profil = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     phone = models.CharField(max_length=20, blank=True)
     birth_date = models.DateField(null=True, blank=True)

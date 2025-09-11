@@ -8,14 +8,8 @@
             <h2><i class="fas fa-user-tag me-2"></i>Gestion des Rôles et Permissions</h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
-                <li>Administration</li>
                 <li>Rôles et Permissions</li>
             </ul>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoleModal">
-                <i class="fas fa-plus me-1"></i> Nouveau Rôle
-            </button>
         </div>
     </div>
 
@@ -134,18 +128,9 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'accounts:edit_role' group.id %}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Modifier">
+                                            <a href="{% url 'accounts:edit_role' group.id %}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Voir detail">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            {% if group.user_set.count == 0 %}
-                                            <a href="{% url 'accounts:delete_role' group.id %}" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Supprimer">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                            {% else %}
-                                            <button class="btn btn-outline-secondary" disabled data-bs-toggle="tooltip" title="Impossible de supprimer (utilisateurs associés)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>

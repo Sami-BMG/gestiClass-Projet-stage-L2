@@ -18,9 +18,9 @@ from io import StringIO
 import secrets
 import string
 from .forms import CustomUserCreationForm,AssignRoleForm,RoleForm
-from .models import Result, Module, User, ContactMessage, FAQ, SchoolInfo
+from .models import Result, Module, User, ContactMessage, FAQ, SchoolInfo,Teacher ,Student
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import User, Group, Permission 
 from django import forms
 
 
@@ -286,6 +286,7 @@ def edit_role(request, role_id):
     }
     return render(request, 'roles/edit_role.html', context)
 
+
 @login_required
 @permission_required('auth.delete_group', raise_exception=True)
 def delete_role(request, role_id):
@@ -306,55 +307,64 @@ def delete_role(request, role_id):
 
 @login_required
 @permission_required('auth.change_user', raise_exception=True)
-def assign_student_role(request, user_id):
-    """Attribuer un rôle à un étudiant"""
-    user = get_object_or_404(User, id=user_id)
+def assign_student_role(request, student_id):
+    student = get_object_or_404(User, id=student_id, profil='student')
     
     if request.method == 'POST':
-        role_id = request.POST.get('role')
-        if role_id:
-            role = get_object_or_404(Group, id=role_id)
-            user.groups.clear()
-            user.groups.add(role)
-            messages.success(request, f'Rôle "{role.name}" attribué à {user.username} avec succès!')
-            return redirect('accounts:role_list')
+        role_ids = request.POST.getlist('roles')  # Pour plusieurs sélections
+        if role_ids:
+            student.groups.clear()
+            for role_id in role_ids:
+                role = get_object_or_404(Group, id=role_id)
+                student.groups.add(role)
+            messages.success(request, f'Rôles attribués à {student.username} avec succès!')
         else:
-            messages.error(request, 'Veuillez sélectionner un rôle.')
+            student.groups.clear()
+            messages.success(request, f'Tous les rôles ont été retirés de {student.username}!')
+        
+        return redirect('accounts:assign_student_role', student_id=student_id)
     
     available_roles = Group.objects.all()
     
     context = {
-        'user': user,
+        'student': student,
         'available_roles': available_roles,
-        'title': f'Attribuer un rôle à {user.username}'
+        'title': f'Attribuer des rôles à {student.username}'
     }
     return render(request, 'roles/assign_student_role.html', context)
 
+
+
 @login_required
 @permission_required('auth.change_user', raise_exception=True)
-def assign_teacher_role(request, user_id):
-    """Attribuer un rôle à un enseignant"""
-    user = get_object_or_404(User, id=user_id)
+def assign_teacher_role(request, teacher_id):
+    """Attribuer un rôle à un enseignant spécifique"""
+    # Correction : ajouter le teacher_id dans la requête
+    teacher = get_object_or_404(User, id=teacher_id, profil='teacher')
     
     if request.method == 'POST':
         role_id = request.POST.get('role')
         if role_id:
             role = get_object_or_404(Group, id=role_id)
-            user.groups.clear()
-            user.groups.add(role)
-            messages.success(request, f'Rôle "{role.name}" attribué à {user.username} avec succès!')
-            return redirect('accounts:role_list')
+            teacher.groups.clear()
+            teacher.groups.add(role)
+            messages.success(request, f'Rôle "{role.name}" attribué à {teacher.username} avec succès!')
+            return redirect('accounts:assign_teacher_role', teacher_id=teacher_id)
         else:
-            messages.error(request, 'Veuillez sélectionner un rôle.')
+            # Option pour retirer le rôle si aucun n'est sélectionné
+            teacher.groups.clear()
+            messages.success(request, f'Tous les rôles ont été retirés de {teacher.username}!')
+            return redirect('accounts:assign_teacher_role', teacher_id=teacher_id)
     
     available_roles = Group.objects.all()
     
     context = {
-        'user': user,
+        'teacher': teacher,
         'available_roles': available_roles,
-        'title': f'Attribuer un rôle à {user.username}'
+        'title': f'Attribuer un rôle à {teacher.username}'
     }
     return render(request, 'roles/assign_teacher_role.html', context)
+
 
 # ============ VUES POUR LA GESTION DES ÉLÈVES ============
 @login_required

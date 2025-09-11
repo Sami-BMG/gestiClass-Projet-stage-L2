@@ -124,8 +124,8 @@ urlpatterns = [
     path('roles/', views.role_list, name='role_list'),
     path('roles/<int:role_id>/edit/', views.edit_role, name='edit_role'),
     path('roles/<int:role_id>/delete/', views.delete_role, name='delete_role'),
-    path('students/<int:user_id>/assign-role/', views.assign_student_role, name='assign_student_role'),
-    path('teachers/<int:user_id>/assign-role/', views.assign_teacher_role, name='assign_teacher_role'),
+    path('assign-role/<int:student_id>/', views.assign_student_role, name='assign_student_role'),
+    path('assign-teacher-role/<int:teacher_id>/', views.assign_teacher_role, name='assign_teacher_role'),
     
 ]    
         

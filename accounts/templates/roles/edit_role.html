@@ -14,13 +14,116 @@
         </div>
         <div class="btn-group">
             <a href="{% url 'accounts:role_list' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Retour
+                <i class="fas fa-arrow-left me-1"></i> Retour à la liste
             </a>
         </div>
     </div>
 
-    <div class="row justify-content-center">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Informations du rôle -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white text-center">
+                    <h5 class="m-0">Informations du Rôle</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="avatar-lg bg-soft-primary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
+                        <i class="fas fa-shield-alt text-primary font-size-24"></i>
+                    </div>
+                    
+                    <h4 class="text-primary">{{ role.name }}</h4>
+                    
+                    <div class="mt-3">
+                        <span class="badge bg-info">{{ role.user_set.count }} utilisateur(s)</span>
+                        <span class="badge bg-secondary ms-1">{{ role.permissions.count }} permission(s)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilisateurs associés -->
+            {% if role.user_set.all %}
+            <div class="card shadow mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="m-0"><i class="fas fa-users me-1"></i>Utilisateurs Associés</h6>
+                </div>
+                <div class="card-body">
+                    {% for user in role.user_set.all|slice:":5" %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-user-circle text-muted me-2"></i>
+                        <span>{{ user.username }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if role.user_set.count > 5 %}
+                    <div class="text-center mt-2">
+                        <span class="badge bg-light text-dark">+{{ role.user_set.count|add:"-5" }} utilisateur(s) supplémentaire(s)</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Section de suppression -->
+            <div class="card shadow mt-3 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="m-0"><i class="fas fa-trash me-1"></i>Zone de Suppression</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Attention !</strong> Cette action est irréversible.
+                    </div>
+                    
+                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-1"></i> Supprimer ce rôle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de modification -->
         <div class="col-md-8">
+            <!-- Permissions actuelles -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="m-0"><i class="fas fa-list-check me-2"></i>Permissions Actuelles</h5>
+                </div>
+                <div class="card-body">
+                    {% if role.permissions.all %}
+                    <div class="row">
+                        {% for perm in role.permissions.all %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center p-2 border rounded">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <div>
+                                    <small class="fw-bold d-block">{{ perm.codename }}</small>
+                                    <small class="text-muted">{{ perm.name }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Aucune permission attribuée à ce rôle.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h5 class="m-0"><i class="fas fa-edit me-2"></i>Modifier le Rôle</h5>
@@ -39,7 +142,7 @@
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">Permissions</label>
-                            <div class="form-text mb-2">Sélectionnez les permissions pour ce rôle</div>
+                            <div class="form-text mb-2">Sélectionnez les permissions pour ce rôle (Ctrl+clic pour multiple)</div>
                             {{ form.permissions }}
                             {% if form.permissions.errors %}
                             <div class="text-danger">{{ form.permissions.errors }}</div>
@@ -51,7 +154,7 @@
                                 <i class="fas fa-times me-1"></i> Annuler
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i> Enregistrer
+                                <i class="fas fa-save me-1"></i> Enregistrer les modifications
                             </button>
                         </div>
                     </form>
@@ -60,4 +163,159 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Confirmation de Suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Attention !</strong> Vous êtes sur le point de supprimer définitivement le rôle <strong>"{{ role.name }}"</strong>.
+                </div>
+
+                <!-- Informations du rôle -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="fw-bold text-primary">Nom du rôle</label>
+                                    <p class="mb-0">{{ role.name }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-item">
+                                    <label class="fw-bold text-primary">Utilisateurs</label>
+                                    <p class="mb-0">
+                                        <span class="badge bg-{% if role.user_set.count > 0 %}warning{% else %}success{% endif %}">
+                                            {{ role.user_set.count }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-item">
+                                    <label class="fw-bold text-primary">Permissions</label>
+                                    <p class="mb-0">
+                                        <span class="badge bg-info">{{ role.permissions.count }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Avertissements -->
+                {% if role.user_set.count > 0 %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-users me-2"></i>
+                    <strong>Important :</strong> Ce rôle est actuellement attribué à <strong>{{ role.user_set.count }}</strong> utilisateur(s). 
+                    La suppression du rôle retirera automatiquement ces permissions à tous les utilisateurs concernés.
+                </div>
+                {% endif %}
+
+                {% if role.permissions.count > 0 %}
+                <div class="alert alert-info">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Ce rôle contient <strong>{{ role.permissions.count }}</strong> permission(s) qui seront supprimées.
+                </div>
+                {% endif %}
+
+                <div class="alert alert-secondary">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Cette action est <strong>irréversible</strong>. Veuillez confirmer que vous souhaitez procéder à la suppression.
+                </div>
+
+                <!-- Détails des utilisateurs affectés -->
+                {% if role.user_set.count > 0 %}
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="m-0"><i class="fas fa-user-times me-2"></i>Utilisateurs Affectés</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Les utilisateurs suivants perdront les permissions de ce rôle :</p>
+                        <div class="row">
+                            {% for user in role.user_set.all|slice:":6" %}
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="d-flex align-items-center p-2 border rounded">
+                                    <i class="fas fa-user-circle text-muted me-2"></i>
+                                    <span>{{ user.username }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if role.user_set.count > 6 %}
+                        <div class="text-center mt-2">
+                            <span class="badge bg-light text-dark">+{{ role.user_set.count|add:"-6" }} autre(s) utilisateur(s)</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Annuler
+                </button>
+                <form method="post" action="{% url 'accounts:delete_role' role.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Confirmer la suppression
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-lg {
+    width: 80px;
+    height: 80px;
+}
+.form-select {
+    height: auto;
+    min-height: 200px;
+    border-radius: 8px;
+}
+.border-rounded {
+    border-radius: 8px;
+}
+.info-item {
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    margin-bottom: 10px;
+}
+
+.info-item label {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    display: block;
+    color: #495057;
+}
+
+.info-item p {
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Activation des tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+</script>
 {% endblock %}

@@ -5,7 +5,7 @@
 <div class="content">
     <div class="page-title">
         <div>
-            <h2><i class="fas fa-chalkboard-teacher me-2"></i>Attribution de Rôle à un Enseignant</h2>
+            <h2><i class="fas fa-chalkboard-teacher me-2"></i>Attribution de Rôle à {{ teacher.username }}</h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
                 <li><a href="{% url 'accounts:teachers_list' %}">Enseignants</a></li>
@@ -14,36 +14,41 @@
         </div>
         <div class="btn-group">
             <a href="{% url 'accounts:teachers_list' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Retour aux enseignants
+                <i class="fas fa-arrow-left me-1"></i> Retour
             </a>
         </div>
     </div>
 
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row">
         <!-- Colonne de gauche - Informations enseignant -->
         <div class="col-md-4 mb-4">
+            <!-- Informations enseignant -->
             <div class="card shadow">
-                <div class="card-header bg-warning text-dark text-center">
-                    <h5 class="m-0">Profil de l'enseignant</h5>
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0"><i class="fas fa-user me-1"></i>Informations Enseignant</h6>
                 </div>
-                <div class="card-body text-center">
-                    {% if user.teacher.photo %}
-                        <img src="{{ user.teacher.photo.url }}" 
-                             class="img-fluid rounded-circle mb-3" 
-                             alt="Photo de {{ user.get_full_name }}"
-                             style="width: 150px; height: 150px; object-fit: cover;">
-                    {% else %}
-                        <img src="{% static 'img/default-avatar.png' %}" 
-                             class="img-fluid rounded-circle mb-3" 
-                             alt="Photo par défaut"
-                             style="width: 150px; height: 150px; object-fit: cover;">
-                    {% endif %}
-                    
-                    <h4 class="text-warning">{{ user.get_full_name }}</h4>
-                    <p class="text-muted">@{{ user.username }}</p>
-                    
-                    <div class="d-grid gap-2">
-                        <span class="badge bg-warning text-dark">Enseignant</span>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="avatar-lg bg-soft-primary rounded-circle mx-auto d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-user text-primary fs-2"></i>
+                        </div>
+                        <h5>{{ teacher.get_full_name|default:teacher.username }}</h5>
+                        <p class="text-muted">{{ teacher.email }}</p>
                     </div>
                 </div>
             </div>
@@ -51,17 +56,21 @@
             <!-- Rôle actuel -->
             <div class="card shadow mt-3">
                 <div class="card-header bg-info text-white">
-                    <h6 class="m-0"><i class="fas fa-user-tag me-1"></i>Rôle Actuel</h6>
+                    <h6 class="m-0"><i class="fas fa-user-tag me-1"></i>Rôle(s) Actuel(s)</h6>
                 </div>
-                <div class="card-body text-center">
-                    {% if user.groups.all %}
-                        {% for group in user.groups.all %}
-                        <span class="badge bg-primary p-2 mb-2" style="font-size: 1rem;">
-                            <i class="fas fa-shield-alt me-1"></i>{{ group.name }}
-                        </span>
+                <div class="card-body">
+                    {% if teacher.groups.all %}
+                        {% for group in teacher.groups.all %}
+                        <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <span class="fw-bold">{{ group.name }}</span>
+                        </div>
                         {% endfor %}
                     {% else %}
-                        <span class="text-muted">Aucun rôle attribué</span>
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                            <p>Aucun rôle attribué</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -71,12 +80,12 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="m-0"><i class="fas fa-shield-alt me-2"></i>Attribution d'un Rôle</h5>
+                    <h5 class="m-0"><i class="fas fa-shield-alt me-2"></i>Gestion des Rôles</h5>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-1"></i>
-                        Sélectionnez un rôle à attribuer à cet enseignant. Les rôles déterminent les permissions d'accès aux différentes fonctionnalités.
+                        Sélectionnez un rôle à attribuer ou modifiez le rôle actuel de cet enseignant.
                     </div>
 
                     <form method="post">
@@ -84,13 +93,17 @@
                         
                         <div class="mb-4">
                             <label for="role" class="form-label fw-bold text-primary">Sélectionner un rôle :</label>
-                            <select class="form-select form-select-lg" id="role" name="role" required>
-                                <option value="">Choisir un rôle...</option>
-                                {% for role in available_roles %}
-                                <option value="{{ role.id }}">{{ role.name }}</option>
+                            <select class="form-select form-select-lg" id="role" name="role">
+                                <option value="">-- Choisissez un rôle --</option>
+                                {% for role in available_roles %} 
+                                <option value="{{ role.id }}" {% if role in teacher.groups.all %}selected{% endif %}>
+                                    {{ role.name }}
+                                </option>
                                 {% endfor %}
                             </select>
-                            <div class="form-text">Le rôle sélectionné remplacera le rôle actuel de l'enseignant.</div>
+                            <div class="form-text">
+                                Sélectionnez un rôle à attribuer ou choisissez "Aucun rôle" pour retirer le rôle actuel.
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -98,79 +111,30 @@
                                 <i class="fas fa-times me-1"></i> Annuler
                             </a>
                             <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-save me-1"></i> Attribuer le rôle
+                                <i class="fas fa-save me-1"></i> Appliquer les modifications
                             </button>
                         </div>
                     </form>
-                </div>
-            </div>
 
-            <!-- Liste des rôles disponibles -->
-            <div class="card shadow mt-4">
-                <div class="card-header bg-light">
-                    <h5 class="m-0"><i class="fas fa-list me-2"></i>Rôles Disponibles</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for role in available_roles %}
-                        <div class="col-md-6 mb-3">
-                            <div class="role-card p-3 border rounded">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm bg-soft-primary rounded-circle me-3 d-flex align-items-center justify-content-center">
-                                        <i class="fas fa-shield-alt text-primary"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-0">{{ role.name }}</h6>
-                                        <small class="text-muted">{{ role.user_set.count }} utilisateur(s)</small>
+                    <!-- Liste des rôles disponibles -->
+                    <div class="mt-4">
+                        <h6 class="text-primary mb-3"><i class="fas fa-list me-2"></i>Rôles Disponibles</h6>
+                        <div class="row">
+                            {% for role in available_roles %}
+                            <div class="col-md-6 mb-3">
+                                <div class="role-card p-3 border rounded {% if role in teacher.groups.all %}border-warning bg-soft-warning{% endif %}">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-soft-warning rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-shield-alt text-warning"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{{ role.name }}</h6>
+                                            <small class="text-muted">{{ role.user_set.count }} utilisateur(s)</small>
+                                        </div>  
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Informations sur les permissions -->
-            <div class="card shadow mt-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="m-0"><i class="fas fa-key me-2"></i>À propos des Rôles</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Rôles courants pour enseignants:</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex align-items-center">
-                                    <i class="fas fa-check-circle text-success me-2"></i>
-                                    <span>Enseignant - Accès base</span>
-                                </li>
-                                <li class="list-group-item d-flex align-items-center">
-                                    <i class="fas fa-check-circle text-success me-2"></i>
-                                    <span>Coordinateur - Gestion de classe</span>
-                                </li>
-                                <li class="list-group-item d-flex align-items-center">
-                                    <i class="fas fa-check-circle text-success me-2"></i>
-                                    <span>Administrateur - Accès complet</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Permissions associées:</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex align-items-center">
-                                    <i class="fas fa-graduation-cap text-primary me-2"></i>
-                                    <span>Gestion des notes</span>
-                                </li>
-                                <li class="list-group-item d-flex align-items-center">
-                                    <i class="fas fa-tasks text-primary me-2"></i>
-                                    <span>Création de devoirs</span>
-                                </li>
-                                <li class="list-group-item d-flex align-items-center">
-                                    <i class="fas fa-chart-line text-primary me-2"></i>
-                                    <span>Consultation des statistiques</span>
-                                </li>
-                            </ul>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -178,39 +142,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.role-card {
-    transition: all 0.3s ease;
-}
-
-.role-card:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.avatar-sm {
-    width: 40px;
-    height: 40px;
-}
-
-.form-select {
-    border-radius: 8px;
-    border: 2px solid #e9ecef;
-    transition: border-color 0.3s;
-}
-
-.form-select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.list-group-item {
-    border: none;
-    padding: 0.5rem 0;
-}
-</style>
 {% endblock %}
