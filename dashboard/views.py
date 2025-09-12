@@ -57,12 +57,15 @@ def admin_dashboard(request):
         django_messages.error(request, "Accès réservé aux administrateurs.")
         return redirect('accounts:login')
     
+    
+    
     # Récupérer les données pour le dashboard
     context = {
         'title': 'Tableau de bord Administrateur',
         'user': request.user,
         'student_count': User.objects.filter(profil='student').count(),
         'teacher_count': User.objects.filter(profil='teacher').count(),
+        'module_count': Module.objects.count(),
         'new_contacts_count': ContactMessage.objects.count(),
         'modules': Module.objects.all(),
         'teachers': Teacher.objects.all(),
@@ -90,8 +93,7 @@ def teacher_dashboard(request):
         'student_count': User.objects.filter(profil='student').count(),
         'teacher_count': User.objects.filter(profil='teacher').count(),
         'module_count': Module.objects.count(),  
-        'teacher_modules_count': teacher_modules_count, 
-        'stats': {'total_students': Student.objects.count(),'total_modules': available_modules_count,},
+        'stats': {'total_students': Student.objects.count(),},
         'show_module_chart': True,  
     }
     
@@ -113,7 +115,6 @@ def student_dashboard(request):
     days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
     schedule_dict = {day: {'8h-10h': None, '10h-12h': None, '14h-16h': None, '16h-18h': None} for day in days}
     
-    
     student_info = InfoMessage.objects.filter(audience='student').first()
     
     context = {
@@ -125,7 +126,8 @@ def student_dashboard(request):
         'days': days,
         'student_count': User.objects.filter(profil='student').count(),
         'teacher_count': User.objects.filter(profil='teacher').count(),
-        'show_module_chart': True,  # ← Nouveau: Activer le graphique
+        'module_count': Module.objects.count(),
+        'show_module_chart': True,  
     }
     
     return render(request, 'dashboard/student_dashboard.html', context)
@@ -146,7 +148,7 @@ def module_chart_data(request):
         ).order_by('module__nom')
         
         # Préparer les données pour le graphique
-        labels = [item['module'] for item in modules]
+        labels = [item['module'] for item in Module]
         datasets = [round(float(item['moyenne'] or 0), 2) for item in modules_data]
         
         data = {

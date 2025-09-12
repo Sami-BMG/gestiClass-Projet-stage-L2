@@ -39,6 +39,14 @@ class User(AbstractUser):
     def get_type(self):
         return self.profil
     
+    class Meta:
+        permissions = [
+        ("peut_acceder_module", "Peut acceder au module"),  
+        ("peut_acceder_aux_eleve", "Peut acceder aux eleves"), 
+        ("peut_acceder_aux_enseigants", "peut_acceder_aux_enseigants"),  
+        ("peut_acceder_aux_roles", "peut_acceder_aux_roles"),  
+
+        ]   
     
 
 class Student(models.Model):
@@ -98,6 +106,8 @@ class Module(models.Model):
     
     def __str__(self):
         return f"{self.code} - {self.name}"
+    
+
 
 class Note(models.Model):
     student = models.ForeignKey(
@@ -125,9 +135,6 @@ class Note(models.Model):
     
     def __str__(self):
         return f"{self.student.username} - {self.module.code}: {self.value}"
-
-
-
 
 class Result(models.Model):
     SEMESTER_CHOICES = [
@@ -227,7 +234,6 @@ class InfoMessage(models.Model):
     
     def __str__(self):
         return f"Info for {self.get_audience_display()} - {self.title}"
-
 
 class ContactMessage(models.Model):
     TYPE_CHOICES = [

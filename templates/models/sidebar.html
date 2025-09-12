@@ -6,16 +6,18 @@
     <div class="sidebar-menu">
         <ul>
             <li><a href="{% url 'dashboard:home' %}" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+
             <li><a href="{% url 'accounts:students_list' %}"><i class="fas fa-user-graduate"></i> Étudiants</a></li>
             
-            {% if user.profil == 'teacher' or user.profil == 'admin' or user.is_staff or user.is_superuser %}
+            {% if perms.accounts.peut_acceder_aux_enseignants %}
             <li><a href="{% url 'accounts:teachers_list' %}" ><i class="fas fa-chalkboard-teacher"></i> Enseignants</a></li>
             {% endif %}
-            
+            {% if perms.accounts.peut_acceder_module %}
             <li><a href="{% url 'accounts:modules_list' %}"><i class="fas fa-book"></i> Modules</a></li>
-            <li><a href="{% url 'accounts:results_list' %}"><i class="fas fa-chart-bar"></i> Résulats</a></li>
+            {% endif %}
 
-            {% if user.profil == 'teacher' or user.profil == 'admin' or user.is_staff  %}
+            <li><a href="{% url 'accounts:results_list' %}"><i class="fas fa-chart-bar"></i> Résulats</a></li>
+            {% if perms.accounts.peut_acceder_aux_roles %}
             <li><a href="{% url 'accounts:role_list' %}"><i class="fas fa-user-shield"></i> Rôles et Permissions</a></li>
             {% endif %}
 
