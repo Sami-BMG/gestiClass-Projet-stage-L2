@@ -1,21 +1,27 @@
 from pyexpat.errors import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages as django_messages
 from datetime import datetime,timedelta
+from django.utils import timezone
+
 import calendar
-from accounts.models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo,TimetableEntry,Note
+from accounts.models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo,Note
 from django.db import models
 from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from chartjs.views.lines import BaseLineChartView
 from django.db.models import Avg
+from django.db import transaction 
 from django.views.decorators.http import require_GET
+from django.utils import timezone
+from datetime import timedelta
+from accounts.models import Timetable 
 
 
 
@@ -83,8 +89,10 @@ def teacher_dashboard(request):
         'teacher_info': teacher_info,
         'student_count': User.objects.filter(profil='student').count(),
         'teacher_count': User.objects.filter(profil='teacher').count(),
-        'stats': {'total_students': Student.objects.count()},
-        'show_module_chart': True,  # ← Nouveau: Activer le graphique
+        'module_count': Module.objects.count(),  
+        'teacher_modules_count': teacher_modules_count, 
+        'stats': {'total_students': Student.objects.count(),'total_modules': available_modules_count,},
+        'show_module_chart': True,  
     }
     
     return render(request, 'dashboard/teacher_dashboard.html', context)
@@ -101,17 +109,10 @@ def student_dashboard(request):
     week_start = today - timedelta(days=today.weekday())
     week_str = week_start.strftime("%Y-%m-%d")
     
-    timetable = Timetable.objects.filter(week=week_str).order_by('day', 'timeslot')
     
     days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
     schedule_dict = {day: {'8h-10h': None, '10h-12h': None, '14h-16h': None, '16h-18h': None} for day in days}
     
-    for entry in timetable:
-        time_slot = entry.get_timeslot_display()
-        schedule_dict[entry.day][time_slot] = {
-            'module': entry.module,
-            'teacher': entry.teacher
-        }
     
     student_info = InfoMessage.objects.filter(audience='student').first()
     
@@ -128,6 +129,8 @@ def student_dashboard(request):
     }
     
     return render(request, 'dashboard/student_dashboard.html', context)
+
+
 # ============ VUES DE Graphe ============
 
 @require_GET
@@ -306,58 +309,64 @@ def get_suggestion_detail(request):
 
 # ============ VUES DU PLANNING ============
 @login_required
-@login_required
 def timetable_view(request):
-    # Utiliser directement le champ 'profil' de l'utilisateur
-    user_profile = request.user  # L'utilisateur a directement le champ 'profil'
-    
-    # Récupérer les modules et enseignants
-    modules = Module.objects.all()
-    teachers = Teacher.objects.all()
-    
     # Déterminer la semaine actuelle
-    today = datetime.now().date()
-    current_week = today - timedelta(days=today.weekday())
+    week_param = request.GET.get('week')
+    if week_param:
+        try:
+            year, week_num = map(int, week_param.split('-'))
+            jan1 = datetime(year, 1, 1)
+            # Trouver le premier lundi de l'année
+            while jan1.weekday() != 0:  # 0 = lundi
+                jan1 += timedelta(days=1)
+            current_week = jan1 + timedelta(weeks=week_num - 1)
+        except (ValueError, IndexError):
+            current_week = timezone.now().date() - timedelta(days=timezone.now().date().weekday())
+    else:
+        current_week = timezone.now().date() - timedelta(days=timezone.now().date().weekday())
     
+    # Récupérer tous les emplois du temps de la semaine actuelle
+    timetable_entries = Timetable.objects.filter(week_start=current_week)
+    
+    # Structurer les données pour le template
+    morning_slots = ['8-10', '10-12']  # Créneaux du matin
+    afternoon_slots = ['14-16', '16-18']  # Créneaux de l'après-midi
+    
+    time_slots = morning_slots + afternoon_slots  
+    days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+    
+    # Créer une structure de données organisée par jour et créneau
+    organized_entries = {}
+    for day in days:
+        organized_entries[day] = {}
+        for time_slot in time_slots:
+            organized_entries[day][time_slot] = None
+    
+    # Remplir avec les données existantes
+    for entry in timetable_entries:
+        if entry.day in organized_entries and entry.timeslot in organized_entries[entry.day]:
+            organized_entries[entry.day][entry.timeslot] = entry
+    
+    # Vérifier les permissions
+    can_edit = request.user.has_perm('planning.can_manage_timetable')
+    can_publish = request.user.has_perm('planning.can_publish_timetable')
     
     context = {
-        'user_profile': user_profile,  # On envoie l'utilisateur directement
-        'modules': modules,
-        'teachers': teachers,
-        'days': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-        'week_days': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+        'user': request.user,
+        'timetable_entries': organized_entries,
+        'modules': Module.objects.all(),
+        'teachers': User.objects.filter(profil='teacher'),
+        'days': days,
+        'time_slots': time_slots,  # Tous les créneaux
+        'morning_slots': morning_slots,  # Créneaux du matin seulement
+        'afternoon_slots': afternoon_slots,  # Créneaux de l'après-midi seulement
         'current_week': current_week,
+        'can_edit': can_edit,
+        'can_publish': can_publish,
     }
     
     return render(request, 'planning/create_planning.html', context)
 
-@login_required
-def timetable_view(request):
-    # Utiliser directement le champ 'profil' de l'utilisateur
-    user_profile = request.user
-    
-    # Récupérer les modules et enseignants
-    modules = Module.objects.all()
-    teachers = Teacher.objects.all()
-    
-    # Déterminer la semaine actuelle
-    today = datetime.now().date()
-    current_week = today - timedelta(days=today.weekday())
-    
-    # Récupérer le nom de la classe (à adapter selon votre logique)
-    class_name = "Classe Principale"  # Exemple
-    
-    context = {
-        'user_profile': user_profile,
-        'modules': modules,
-        'teachers': teachers,
-        'days': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-        'week_days': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        'current_week': current_week,
-        'class_name': class_name,
-    }
-    
-    return render(request, 'planning/create_planning.html', context)
 
 @require_http_methods(["GET"])
 @login_required
@@ -365,6 +374,7 @@ def get_timetable_data(request):
     """Récupérer les données d'emploi du temps pour une semaine spécifique"""
     try:
         week_str = request.GET.get('week')
+        
         if not week_str:
             return JsonResponse({'success': False, 'error': 'Paramètre week manquant'})
         
@@ -372,27 +382,34 @@ def get_timetable_data(request):
         
         # Calculer la date du lundi de cette semaine
         jan1 = datetime(year, 1, 1)
-        monday = jan1 + timedelta(days=(week_num - 1) * 7 - jan1.weekday())
+        week_start = jan1 + timedelta(days=(week_num - 1) * 7 - jan1.weekday())
         
-        # Récupérer l'emploi du temps
-        timetable = Timetable.objects.filter(week_start=monday).first()
+        # Récupérer les entrées d'emploi du temps
+        entries = Timetable.objects.filter(week_start=week_start)
         
         data = {}
-        if timetable:
-            entries = TimetableEntry.objects.filter(timetable=timetable)
-            for entry in entries:
-                day = entry.day.lower()
-                slot = f"{entry.start_time.strftime('%H')}-{entry.end_time.strftime('%H')}"
-                
-                if day not in data:
-                    data[day] = {}
-                
-                data[day][slot] = {
-                    'module_id': entry.module.id if entry.module else None,
-                    'teacher_id': entry.teacher.id if entry.teacher else None,
-                }
+        for entry in entries:
+            day = entry.day
+            time_slot = entry.timeslot
+            
+            if day not in data:
+                data[day] = {}
+            
+            data[day][time_slot] = {
+                'module_id': entry.module.id,
+                'module_name': entry.module.name,
+                'module_code': entry.module.code,
+                'teacher_id': entry.teacher.id,
+                'teacher_name': f"{entry.teacher.first_name} {entry.teacher.last_name}",
+                'classroom': entry.classroom,
+                'notes': entry.notes,
+            }
         
-        return JsonResponse({'success': True, 'data': data})
+        return JsonResponse({
+            'success': True, 
+            'data': data,
+            'week_start': week_start.isoformat()
+        })
     
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
@@ -400,61 +417,84 @@ def get_timetable_data(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 @login_required
+@permission_required('planning.can_manage_timetable', raise_exception=True)
 def save_timetable_data(request):
     """Sauvegarder les données d'emploi du temps"""
     try:
-        # Vérifier que l'utilisateur est admin
-        if not request.user.profil == 'admin':
-            return JsonResponse({'success': False, 'error': 'Permission denied'})
-        
         data = json.loads(request.body)
         week_str = data.get('week')
         timetable_data = data.get('timetable_data', {})
         
+        print(f"Données reçues: {data}")  # DEBUG
+        
         if not week_str:
             return JsonResponse({'success': False, 'error': 'Paramètre week manquant'})
         
-        year, week_num = map(int, week_str.split('-W'))
+        # Extraire l'année et le numéro de semaine
+        try:
+            year = int(week_str.split('-W')[0])
+            week_num = int(week_str.split('-W')[1])
+        except (ValueError, IndexError):
+            return JsonResponse({'success': False, 'error': 'Format de semaine invalide'})
+        
+        # Calculer la date du lundi de cette semaine
         jan1 = datetime(year, 1, 1)
-        week_start = jan1 + timedelta(days=(week_num - 1) * 7 - jan1.weekday())
+        # Trouver le premier lundi de l'année
+        while jan1.weekday() != 0:  # 0 = lundi
+            jan1 += timedelta(days=1)
         
-        # Créer ou mettre à jour l'emploi du temps
-        timetable, created = Timetable.objects.get_or_create(
-            week_start=week_start,
-            defaults={'created_by': request.user}
-        )
+        week_start = jan1 + timedelta(weeks=week_num - 1)
         
-        if not created:
-            timetable.updated_by = request.user
-            timetable.save()
+        print(f"Week start calculée: {week_start}")  # DEBUG
         
-        # Supprimer les anciennes entrées
-        TimetableEntry.objects.filter(timetable=timetable).delete()
+        with transaction.atomic():  # MAINTENANT transaction EST DÉFINI
+            # Supprimer les anciennes entrées pour cette semaine
+            Timetable.objects.filter(week_start=week_start).delete()
+            
+            # Créer les nouvelles entrées
+            for day, slots in timetable_data.items():
+                for time_slot, entry_data in slots.items():
+                    if (entry_data.get('module_id') and entry_data.get('teacher_id')):
+                        
+                        # Vérifier que le jour et le timeslot sont valides
+                        if day not in [choice[0] for choice in Timetable.DAY_CHOICES]:
+                            continue
+                        if time_slot not in [choice[0] for choice in Timetable.TIMESLOT_CHOICES]:
+                            continue
+                        
+                        Timetable.objects.create(
+                            week_start=week_start,
+                            day=day,
+                            timeslot=time_slot,
+                            module_id=entry_data['module_id'],
+                            teacher_id=entry_data['teacher_id'],
+                            classroom=entry_data.get('classroom', ''),
+                            notes=entry_data.get('notes', '')
+                        )
         
-        # Créer les nouvelles entrées
-        time_slots = {
-            '8-10': ('08:00:00', '10:00:00'),
-            '10-12': ('10:00:00', '12:00:00'),
-            '14-16': ('14:00:00', '16:00:00'),
-            '16-18': ('16:00:00', '18:00:00')
-        }
-        
-        for day, slots in timetable_data.items():
-            for slot, entry_data in slots.items():
-                if entry_data.get('module') and entry_data.get('teacher'):
-                    start_time, end_time = time_slots.get(slot, ('00:00:00', '00:00:00'))
-                    
-                    TimetableEntry.objects.create(
-                        timetable=timetable,
-                        day=day.upper(),
-                        start_time=start_time,
-                        end_time=end_time,
-                        module_id=entry_data['module'],
-                        teacher_id=entry_data['teacher']
-                    )
-        
-        return JsonResponse({'success': True, 'message': 'Emploi du temps sauvegardé avec succès'})
+        return JsonResponse({
+            'success': True, 
+            'message': 'Emploi du temps sauvegardé avec succès',
+            'week_start': week_start.isoformat()
+        })
     
     except Exception as e:
+        print(f"Erreur: {str(e)}")  # DEBUG
         return JsonResponse({'success': False, 'error': str(e)})
-
+    
+    
+    
+@require_http_methods(["GET"])
+@login_required
+def get_available_resources(request):
+    """Récupérer les ressources disponibles"""
+    modules = list(Module.objects.values('id', 'name', 'code'))
+    teachers = list(User.objects.filter(profil='teacher').values(
+        'id', 'first_name', 'last_name', 'email'
+    ))
+    
+    return JsonResponse({
+        'success': True,
+        'modules': modules,
+        'teachers': teachers
+    })

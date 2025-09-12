@@ -7,7 +7,7 @@
         <div>
             <h2>
                 <i class="fas {% if user_type == 'student' %}fa-user-graduate{% else %}fa-chalkboard-teacher{% endif %} me-2"></i>
-                Attribution de Rôle à {{ user.username }}
+                Attribution de Rôle à {{ elem.username }}
             </h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
@@ -54,8 +54,8 @@
                         <div class="avatar-lg bg-soft-primary rounded-circle mx-auto d-flex align-items-center justify-content-center mb-2">
                             <i class="fas fa-user text-primary fs-2"></i>
                         </div>
-                        <h5>{{ user.get_full_name|default:user.username }}</h5>
-                        <p class="text-muted">{{ user.email }}</p>
+                        <h5>{{ elem.get_full_name|default:elem.username }}</h5>
+                        <p class="text-muted">{{ elem.email }}</p>
                     </div>
                 </div>
             </div>
@@ -66,8 +66,8 @@
                     <h6 class="m-0"><i class="fas fa-user-tag me-1"></i>Rôle(s) Actuel(s)</h6>
                 </div>
                 <div class="card-body">
-                    {% if user.groups.all %}
-                        {% for group in user.groups.all %}
+                    {% if elem.groups.all %}
+                        {% for group in elem.groups.all %}
                         <div class="d-flex align-items-center justify-content-between mb-2 p-2 bg-light rounded">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-shield-alt text-primary me-2"></i>
@@ -112,7 +112,7 @@
                             <select class="form-select form-select-lg" id="role" name="role">
                                 <option value="">-- Choisissez un rôle --</option>
                                 {% for role in available_roles %} 
-                                <option value="{{ role.id }}" {% if role in user.groups.all %}selected{% endif %}>
+                                <option value="{{ role.id }}" {% if role in elem.groups.all %}selected{% endif %}>
                                     {{ role.name }}
                                 </option>
                                 {% endfor %}
@@ -138,7 +138,7 @@
                         <div class="row">
                             {% for role in available_roles %}
                             <div class="col-md-6 mb-3">
-                                <div class="role-card p-3 border rounded {% if role in user.groups.all %}{% if user_type == 'student' %}border-primary bg-soft-primary{% else %}border-warning bg-soft-warning{% endif %}{% endif %}">
+                                <div class="role-card p-3 border rounded {% if role in elem.groups.all %}{% if user_type == 'student' %}border-primary bg-soft-primary{% else %}border-warning bg-soft-warning{% endif %}{% endif %}">
                                     <div class="d-flex align-items-center">
                                         <div class="avatar-sm {% if user_type == 'student' %}bg-soft-primary{% else %}bg-soft-warning{% endif %} rounded-circle me-3 d-flex align-items-center justify-content-center">
                                             <i class="fas fa-shield-alt {% if user_type == 'student' %}text-primary{% else %}text-warning{% endif %}"></i>
@@ -169,14 +169,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir retirer le rôle <strong id="roleName"></strong> de l'utilisateur <strong>{{ user.username }}</strong> ?</p>
+                <p>Êtes-vous sûr de vouloir retirer le rôle <strong id="roleName"></strong> de l'utilisateur <strong>{{ elem.username }}</strong> ?</p>
                 <p class="text-muted">Cette action ne peut pas être annulée.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i> Annuler
                 </button>
-                <form id="removeRoleForm" method="post" action="{% url 'accounts:remove_user_role' user.id %}">
+                <form id="removeRoleForm" method="post" action="{% url 'accounts:remove_user_role' elem.id %}">
                     {% csrf_token %}
                     <input type="hidden" name="role_id" id="modalRoleId" value="{{role.id}}">
                     <button type="submit" class="btn btn-danger">

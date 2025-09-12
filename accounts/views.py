@@ -335,7 +335,7 @@ def assign_user_role(request, user_id, user_type):
     available_roles = Group.objects.all()
     
     context = {
-        'user': user,  # Variable commune pour les deux types
+        'elem': user,  # Variable commune pour les deux types
         'user_type': user_type,
         'available_roles': available_roles,
         'title': f'Attribuer un rôle à {user.username}'

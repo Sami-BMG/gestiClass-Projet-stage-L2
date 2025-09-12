@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo,TimetableEntry
+from .models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 class CustomUserAdmin(UserAdmin):
@@ -59,9 +59,12 @@ class ResultAdmin(admin.ModelAdmin):
 
 @admin.register(Timetable)
 class TimetableAdmin(admin.ModelAdmin):
-    list_display = ['week', 'day', 'timeslot', 'module', 'teacher'] 
-    list_filter = ['week', 'day', 'module']  
-    raw_id_fields = ['module', 'teacher'] 
+    list_display = ['week_start', 'day', 'timeslot', 'module', 'teacher', 'classroom']
+    list_filter = ['week_start', 'day', 'timeslot', 'module', 'teacher']
+    search_fields = ['module__name', 'teacher__first_name', 'teacher__last_name', 'classroom']
+    date_hierarchy = 'week_start'
+    ordering = ['week_start', 'day', 'timeslot']
+
 
 @admin.register(InfoMessage)
 class InfoMessageAdmin(admin.ModelAdmin):
@@ -88,7 +91,7 @@ class SchoolInfoAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'phone', 'is_active')
     list_filter = ('is_active',)
 
-models_to_unregister = [Student, Teacher, Timetable,Module,Result,Timetable, TimetableAdmin,TimetableEntry,InfoMessage,ContactMessage,FAQ,SchoolInfo]
+models_to_unregister = [Student, Teacher, Timetable,Module,Result,Timetable, TimetableAdmin,InfoMessage,ContactMessage,FAQ,SchoolInfo]
 for model in models_to_unregister:
     if admin.site.is_registered(model):
         admin.site.unregister(model)
@@ -100,7 +103,6 @@ admin.site.register(Teacher, TeacherAdmin)
 admin.site.register(Module)
 admin.site.register(Result)
 admin.site.register(Timetable, TimetableAdmin)
-admin.site.register(TimetableEntry)
 admin.site.register(InfoMessage)
 admin.site.register(ContactMessage)
 admin.site.register(FAQ)

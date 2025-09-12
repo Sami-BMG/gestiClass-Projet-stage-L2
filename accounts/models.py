@@ -171,36 +171,6 @@ class Result(models.Model):
 
 class Timetable(models.Model):
     DAY_CHOICES = [
-        ('monday', 'Lundi'),
-        ('tuesday', 'Mardi'),
-        ('wednesday', 'Mercredi'),
-        ('thursday', 'Jeudi'),
-        ('friday', 'Vendredi'),
-        ('saturday', 'Samedi'),
-    ]
-    
-    TIMESLOT_CHOICES = [
-        ('1', '8h-10h'),
-        ('2', '10h-12h'),
-        ('3', '14h-16h'),
-        ('4', '16h-18h'),
-    ]
-    
-    week = models.DateField()
-    day = models.CharField(max_length=10, choices=DAY_CHOICES)
-    timeslot = models.CharField(max_length=1, choices=TIMESLOT_CHOICES)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'profil': 'teacher'})
-    
-    class Meta:
-        unique_together = ('week', 'day', 'timeslot')  # SEULEMENT ces 3 champs
-    
-    def __str__(self):
-        return f"{self.get_day_display()} {self.get_timeslot_display()} - {self.module.name}"
-
-
-class TimetableEntry(models.Model):
-    DAY_CHOICES = [
         ('MONDAY', 'Lundi'),
         ('TUESDAY', 'Mardi'),
         ('WEDNESDAY', 'Mercredi'),
@@ -209,15 +179,33 @@ class TimetableEntry(models.Model):
         ('SATURDAY', 'Samedi'),
     ]
     
-    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE, related_name='entries')
-    day = models.CharField(max_length=10, choices=DAY_CHOICES)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    module = models.ForeignKey(Module, on_delete=models.SET_NULL, null=True, blank=True)
-    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
+    TIMESLOT_CHOICES = [
+        ('8-10', '8h-10h'),
+        ('10-12', '10h-12h'),
+        ('14-16', '14h-16h'),
+        ('16-18', '16h-18h'),
+    ]
+    
+    week_start = models.DateField(null=True,verbose_name="Début de semaine")
+    day = models.CharField(max_length=10, choices=DAY_CHOICES, verbose_name="Jour")
+    timeslot = models.CharField(max_length=5, choices=TIMESLOT_CHOICES, verbose_name="Créneau")
+    module = models.ForeignKey('Module', on_delete=models.CASCADE, verbose_name="Module")
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'profil': 'teacher'}, verbose_name="Enseignant")
+    classroom = models.CharField(max_length=50, blank=True, verbose_name="Salle")
+    notes = models.TextField(blank=True, verbose_name="Notes")
+    
+    class Meta:
+        unique_together = ('week_start', 'day', 'timeslot')
+        ordering = ['week_start', 'day', 'timeslot']
+        verbose_name = "Emploi du temps"
+        verbose_name_plural = "Emplois du temps"
+        permissions = [
+            ('can_manage_timetable', 'Peut gérer les emplois du temps'),
+            ('can_publish_timetable', 'Peut publier les emplois du temps'),
+        ]
     
     def __str__(self):
-        return f"{self.day} {self.start_time}-{self.end_time} - {self.module if self.module else 'Aucun module'}"
+        return f"{self.week_start} - {self.get_day_display()} {self.get_timeslot_display()} - {self.module}"
 
 
 

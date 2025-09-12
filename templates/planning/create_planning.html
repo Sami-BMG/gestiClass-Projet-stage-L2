@@ -1,119 +1,163 @@
 {% extends 'models/base.html' %}
+{% load static %}
+{% load custom_filters %}
 
 {% block content %}
-<div>
-</div>
-<div>
-</div>
-<div class="page-title" style="display:flex; align-items:center; justify-content:space-between; background:#f8f9fa; padding:15px 20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:20px;">    <!-- En-tête de page -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-calendar-alt mr-2"></i>
-            Emploi du temps 
-        </h1>
-        
-        <!-- Utiliser user_profile.profil au lieu de user_profile.role -->
-        {% if user_profile.profil == 'admin' %}
-            <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#timetableModal">
-                <i class="fas fa-edit fa-sm text-white-50 mr-2"></i> Modifier l'emploi du temps
-            </button>
-        {% endif %}
-    </div>
-    <div class="btn-group">
-        {% if user_profile.profil == 'admin' %}
-        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
-        </a>
-        {% elif user_profile.profil == 'student' %}
-        <a href="{% url 'dashboard:student_dashboard' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
-        </a>
-        {% else %}
-        <a href="{% url 'dashboard:teacher_dashboard' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
-        </a>
-        {% endif %}
-    </div>
-</div>
 <div class="container-fluid">
 
-    <!-- Emploi du temps directement visible -->
+    <!-- Header avec navigation -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <h1 class="m-0 font-weight-bold text-primary text-black">
+                <i class="fas fa-calendar-alt"></i>
+                Planning de la semaine du {{ current_week|date:"d/m/Y" }}
+            </h1>
+
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <!-- Boutons d'action conditionnels -->
+            {% if can_edit %}
+            <button class="btn btn-primary shadow-sm" id="editTimetableBtn" data-bs-toggle="modal" data-bs-target="#timetableModal">
+                <i class="fas fa-edit fa-sm me-2"></i>Modifier
+            </button>
+            {% endif %}
+            
+            <a href="
+                {% if user.profil == 'admin' %}
+                    {% url 'dashboard:admin_dashboard' %}
+                {% elif user.profil == 'teacher' %}
+                    {% url 'dashboard:teacher_dashboard' %}
+                {% elif user.profil == 'student' %}
+                    {% url 'dashboard:student_dashboard' %}
+                {% else %}
+                    {% url 'accounts:login' %}
+                {% endif %}
+                " class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Emploi du temps -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Semaine du {{ current_week|date:"d/m/Y" }}</h6>
-            <div>
-                <input type="week" class="form-control" id="week_select_view" name="week" 
-                       value="{{ current_week|date:'Y-\WW' }}" style="width: 200px;">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-white">
+            <!-- Navigation semaine -->
+            <div class="btn-group me-3">
+                <button class="btn btn-outline-primary" id="prevWeek">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <input type="week" class="form-control text-center" id="weekSelect" 
+                       style="width: 180px;" value="{{ current_week|date:'Y-\WW' }}">
+                <button class="btn btn-outline-primary" id="nextWeek">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
+        
         <div class="card-body">
-            <div class="timetable-container">
+            <div class="table-responsive">
                 <table class="table table-bordered timetable-table">
-                    <thead class="thead-light">
+                    <thead class="thead-dark">
                         <tr>
-                            <th style="width: 10%">Heure/Jour</th>
-                            <th style="width: 15%">Lundi</th>
-                            <th style="width: 15%">Mardi</th>
-                            <th style="width: 15%">Mercredi</th>
-                            <th style="width: 15%">Jeudi</th>
-                            <th style="width: 15%">Vendredi</th>
-                            <th style="width: 15%">Samedi</th>
+                            <th style="width: 10%" class="text-center align-middle bg-light">
+                                <i class="fas fa-clock me-1"></i>Horaire
+                            </th>
+                            {% for day_code in days %}
+                            <th style="width: 15%" class="text-center align-middle">
+                                {{ day_code|title }}<br>
+                                <small class="text-muted">{{ current_week|add_days:forloop.counter0|date:"d/m" }}</small>
+                            </th>
+                            {% endfor %}
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Matin (8h-12h) -->
+                        <!-- Créneaux du matin -->
+                        {% for time_slot in morning_slots %}
                         <tr>
-                            <td class="align-middle">8h-10h</td>
-                            {% for day in days %}
-                            <td>
-                                <div class="view-mode">
-                                    <p class="mb-0 module-name">Mathématiques</p>
-                                    <small class="text-muted teacher-name">M. Dupont</small>
-                                </div>
+                            <td class="align-middle text-center bg-light fw-bold">
+                                {{ time_slot|slice:":2" }}h-{{ time_slot|slice:"3:" }}h
+                            </td>
+                            {% for day_code in days %}
+                            <td class="timetable-cell" data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                {% with day_entries=timetable_entries|get_item:day_code %}
+                                    {% if day_entries %}
+                                        {% with entry=day_entries|get_item:time_slot %}
+                                        {% if entry %}
+                                        <div class="course-content text-center p-2" style="border-left: 4px solid #4e73df;">
+                                            <div class="module-name fw-bold text-truncate">{{ entry.module.name }}</div>
+                                            <div class="teacher-name text-muted small">
+                                                {{ entry.teacher.first_name }} {{ entry.teacher.last_name }}
+                                            </div>
+                                            {% if entry.classroom %}
+                                            <div class="room-number badge bg-info mt-1">{{ entry.classroom }}</div>
+                                            {% endif %}
+                                        </div>
+                                        {% else %}
+                                        <div class="text-center text-muted p-2">
+                                        </div>
+                                        {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <div class="text-center text-muted p-2">
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
                             </td>
                             {% endfor %}
                         </tr>
-                        <tr>
-                            <td class="align-middle">10h-12h</td>
-                            {% for day in days %}
-                            <td>
-                                <div class="view-mode">
-                                    <p class="mb-0 module-name">Français</p>
-                                    <small class="text-muted teacher-name">Mme. Martin</small>
-                                </div>
-                            </td>
-                            {% endfor %}
-                        </tr>
+                        {% endfor %}
                         
-                        <!-- Après-midi (14h-18h) - Pas le samedi -->
-                        <tr>
-                            <td class="align-middle">14h-16h</td>
-                            {% for day in week_days %}
-                            <td>
-                                <div class="view-mode">
-                                    <p class="mb-0 module-name">Physique</p>
-                                    <small class="text-muted teacher-name">M. Leroy</small>
+                        <!-- Pause déjeuner -->
+                        <tr class="bg-light">
+                            <td class="align-middle text-center fw-bold text-muted">
+                                12h-14h
+                            </td>
+                            {% for day_code in days %}
+                            <td class="text-center align-middle bg-light">
+                                <div class="text-muted">
+                                    <i class="fas fa-utensils me-1"></i>Pause déjeuner
                                 </div>
                             </td>
                             {% endfor %}
-                            <td class="disabled-cell align-middle text-center">
-                                <em>Pas de cours</em>
-                            </td>
                         </tr>
+
+                        <!-- Créneaux de l'après-midi -->
+                        {% for time_slot in afternoon_slots %}
                         <tr>
-                            <td class="align-middle">16h-18h</td>
-                            {% for day in week_days %}
-                            <td>
-                                <div class="view-mode">
-                                    <p class="mb-0 module-name">Histoire</p>
-                                    <small class="text-muted teacher-name">Mme. Bernard</small>
-                                </div>
+                            <td class="align-middle text-center bg-light fw-bold">
+                                {{ time_slot|slice:":2" }}h-{{ time_slot|slice:"3:" }}h
+                            </td>
+                            {% for day_code in days %}
+                            <td class="timetable-cell" data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                {% with day_entries=timetable_entries|get_item:day_code %}
+                                    {% if day_entries %}
+                                        {% with entry=day_entries|get_item:time_slot %}
+                                        {% if entry %}
+                                        <div class="course-content text-center p-2" style="border-left: 4px solid #4e73df;">
+                                            <div class="module-name fw-bold text-truncate">{{ entry.module.name }}</div>
+                                            <div class="teacher-name text-muted small">
+                                                {{ entry.teacher.first_name }} {{ entry.teacher.last_name }}
+                                            </div>
+                                            {% if entry.classroom %}
+                                            <div class="room-number badge bg-info mt-1">{{ entry.classroom }}</div>
+                                            {% endif %}
+                                        </div>
+                                        {% else %}
+                                        <div class="text-center text-muted p-2">
+                                        </div>
+                                        {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <div class="text-center text-muted p-2">
+
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
                             </td>
                             {% endfor %}
-                            <td class="disabled-cell align-middle text-center">
-                                <em>Pas de cours</em>
-                            </td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -121,149 +165,113 @@
     </div>
 </div>
 
-<!-- Modal pour modification (admin seulement) -->
-{% if user_profile.profil == 'admin' %}
-<div class="modal fade" id="timetableModal" tabindex="-1" role="dialog" aria-labelledby="timetableModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
+<!-- Modal modification -->
+{% if can_edit %}
+<div class="modal fade" id="timetableModal" tabindex="-1" aria-labelledby="timetableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="timetableModalLabel">
-                    <i class="fas fa-edit mr-2"></i>
-                    Modifier l'emploi du temps - {{ class_name }}
+                    <i class="fas fa-edit me-2"></i>
+                    Modifier l'emploi du temps
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
             <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Sélectionnez une semaine pour modifier l'emploi du temps.
-                </div>
-                
-                <div class="form-group row">
-                    <label for="week_select_edit" class="col-sm-2 col-form-label">Semaine:</label>
-                    <div class="col-sm-4">
-                        <input type="week" class="form-control" id="week_select_edit" name="week" required 
+                <!-- Contrôles de sélection -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Semaine à modifier:</label>
+                        <input type="week" class="form-control" id="editWeekSelect" 
                                value="{{ current_week|date:'Y-\WW' }}">
                     </div>
-                    <div class="col-sm-6 text-right">
-                        <button type="button" class="btn btn-success" id="saveTimetable">
-                            <i class="fas fa-save mr-2"></i>Enregistrer
-                        </button>
-                        <button type="button" class="btn btn-primary ml-2" id="newTimetable">
-                            <i class="fas fa-plus mr-2"></i>Nouveau planning
-                        </button>
-                    </div>
                 </div>
-                
-                <div class="timetable-container mt-4">
-                    <table class="table table-bordered timetable-table">
-                        <thead class="thead-light">
+
+                <!-- Tableau d'édition -->
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
                             <tr>
-                                <th style="width: 10%">Heure/Jour</th>
-                                <th style="width: 15%">Lundi</th>
-                                <th style="width: 15%">Mardi</th>
-                                <th style="width: 15%">Mercredi</th>
-                                <th style="width: 15%">Jeudi</th>
-                                <th style="width: 15%">Vendredi</th>
-                                <th style="width: 15%">Samedi</th>
+                                <th style="width: 8%">Horaire</th>
+                                {% for day_code in days %}
+                                <th style="width: 15.4%">{{ day_code|title }}</th>
+                                {% endfor %}
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Matin (8h-12h) -->
+                            <!-- Créneaux du matin -->
+                            {% for time_slot in morning_slots %}
                             <tr>
-                                <td class="align-middle">8h-10h</td>
-                                {% for day in days %}
+                                <td class="align-middle text-center bg-light fw-bold">
+                                    {{ time_slot|slice:":2" }}h-{{ time_slot|slice:"3:" }}h
+                                </td>
+                                {% for day_code in days %}
                                 <td>
-                                    <select class="form-control module-select" data-day="{{ day }}" data-slot="8-10">
-                                        <option value="">-- Module --</option>
-                                        {% for module in modules %}
-                                        <option value="{{ module.id }}">{{ module.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="8-10">
-                                        <option value="">-- Enseignant --</option>
-                                        {% for teacher in teachers %}
-                                        <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="edit-course-form">
+                                        <select class="form-select mb-2 module-select" 
+                                                data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                            <option value="">-- Choisir un module --</option>
+                                            {% for module in modules %}
+                                            <option value="{{ module.id }}">{{ module.code }} - {{ module.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select class="form-select mb-2 teacher-select" 
+                                                data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                            <option value="">-- Choisir un enseignant --</option>
+                                            {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input type="text" class="form-control room-input" 
+                                            placeholder="Salle" data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                    </div>
                                 </td>
                                 {% endfor %}
                             </tr>
-                            <tr>
-                                <td class="align-middle">10h-12h</td>
-                                {% for day in days %}
-                                <td>
-                                    <select class="form-control module-select" data-day="{{ day }}" data-slot="10-12">
-                                        <option value="">-- Module --</option>
-                                        {% for module in modules %}
-                                        <option value="{{ module.id }}">{{ module.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="10-12">
-                                        <option value="">-- Enseignant --</option>
-                                        {% for teacher in teachers %}
-                                        <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                {% endfor %}
-                            </tr>
+                            {% endfor %}
                             
-                            <!-- Après-midi (14h-18h) - Pas le samedi -->
+                            <!-- Créneaux de l'après-midi -->
+                            {% for time_slot in afternoon_slots %}
                             <tr>
-                                <td class="align-middle">14h-16h</td>
-                                {% for day in week_days %}
+                                <td class="align-middle text-center bg-light fw-bold">
+                                    {{ time_slot|slice:":2" }}h-{{ time_slot|slice:"3:" }}h
+                                </td>
+                                {% for day_code in days %}
                                 <td>
-                                    <select class="form-control module-select" data-day="{{ day }}" data-slot="14-16">
-                                        <option value="">-- Module --</option>
-                                        {% for module in modules %}
-                                        <option value="{{ module.id }}">{{ module.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="14-16">
-                                        <option value="">-- Enseignant --</option>
-                                        {% for teacher in teachers %}
-                                        <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="edit-course-form">
+                                        <select class="form-select mb-2 module-select" 
+                                                data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                            <option value="">-- Choisir un module --</option>
+                                            {% for module in modules %}
+                                            <option value="{{ module.id }}">{{ module.code }} - {{ module.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select class="form-select mb-2 teacher-select" 
+                                                data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                            <option value="">-- Choisir un enseignant --</option>
+                                            {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input type="text" class="form-control room-input" 
+                                            placeholder="Salle" data-day="{{ day_code }}" data-slot="{{ time_slot }}">
+                                    </div>
                                 </td>
                                 {% endfor %}
-                                <td class="disabled-cell align-middle text-center">
-                                    <em>Pas de cours</em>
-                                </td>
                             </tr>
-                            <tr>
-                                <td class="align-middle">16h-18h</td>
-                                {% for day in week_days %}
-                                <td>
-                                    <select class="form-control module-select" data-day="{{ day }}" data-slot="16-18">
-                                        <option value="">-- Module --</option>
-                                        {% for module in modules %}
-                                        <option value="{{ module.id }}">{{ module.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <select class="form-control teacher-select mt-1" data-day="{{ day }}" data-slot="16-18">
-                                        <option value="">-- Enseignant --</option>
-                                        {% for teacher in teachers %}
-                                        <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                {% endfor %}
-                                <td class="disabled-cell align-middle text-center">
-                                    <em>Pas de cours</em>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+            
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
-                <button type="button" class="btn btn-primary" id="saveTimetableFooter">
-                    <i class="fas fa-save mr-2"></i>Enregistrer
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Annuler
+                </button>
+                <button type="button" class="btn btn-success" id="saveChangesBtn">
+                    <i class="fas fa-save me-2"></i>Enregistrer
                 </button>
             </div>
         </div>
@@ -271,56 +279,242 @@
 </div>
 {% endif %}
 
-<!-- ... Votre code existant ... -->
-
+<style>
+    .timetable-table {
+        font-size: 0.9rem;
+    }
+    .timetable-cell {
+        height: 100px;
+        vertical-align: middle;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .timetable-cell:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.02);
+    }
+    .course-content {
+        border-radius: 4px;
+    }
+</style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM chargé - Test des modals');
+        // Navigation entre les semaines
+        document.getElementById('prevWeek').addEventListener('click', function() {
+            navigateWeek(-1);
+        });
+    
+        document.getElementById('nextWeek').addEventListener('click', function() {
+            navigateWeek(1);
+        });
+    
+        document.getElementById('weekSelect').addEventListener('change', function() {
+            navigateToWeek(this.value);
+        });
+    
+        // Gestionnaire pour le bouton d'enregistrement - ESSENTIEL !
+        document.getElementById('saveChangesBtn').addEventListener('click', function() {
+            saveTimetableChanges();
+        });
+    
+        // Charger les données existantes dans le modal quand il s'ouvre
+        $('#timetableModal').on('show.bs.modal', function() {
+            loadExistingTimetableData();
+        });
+    
+        function navigateWeek(direction) {
+            const weekInput = document.getElementById('weekSelect');
+            const currentDate = new Date(weekInput.value + '-1');
+            currentDate.setDate(currentDate.getDate() + (direction * 7));
+            
+            const year = currentDate.getFullYear();
+            const week = getWeekNumber(currentDate);
+            const weekString = `${year}-W${week.toString().padStart(2, '0')}`;
+            
+            navigateToWeek(weekString);
+        }
+    
+        function navigateToWeek(weekString) {
+            const [year, week] = weekString.split('-W');
+            window.location.href = `{% url 'dashboard:timetable_view' %}?week=${year}-${week}`;
+        }
+    
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+        }
+    
+        function loadExistingTimetableData() {
+            const selectedWeek = document.getElementById('editWeekSelect').value;
+            console.log('Chargement des données pour la semaine:', selectedWeek);
+            
+            // Charger les données existantes via AJAX
+            fetch(`{% url 'dashboard:get_timetable_data' %}?week=${selectedWeek}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    populateEditForm(data.data);
+                } else {
+                    console.log('Aucune donnée existante pour cette semaine');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des données:', error);
+            });
+        }
+    
+        function populateEditForm(timetableData) {
+            console.log('Remplissage du formulaire avec:', timetableData);
+            
+            // Réinitialiser tous les champs d'abord
+            document.querySelectorAll('.module-select, .teacher-select, .room-input').forEach(field => {
+                if (field.tagName === 'SELECT') {
+                    field.value = '';
+                } else {
+                    field.value = '';
+                }
+            });
+            
+            // Remplir avec les données existantes
+            for (const day in timetableData) {
+                for (const timeSlot in timetableData[day]) {
+                    const entry = timetableData[day][timeSlot];
+                    
+                    // Trouver les champs correspondants
+                    const moduleSelect = document.querySelector(`.module-select[data-day="${day}"][data-slot="${timeSlot}"]`);
+                    const teacherSelect = document.querySelector(`.teacher-select[data-day="${day}"][data-slot="${timeSlot}"]`);
+                    const roomInput = document.querySelector(`.room-input[data-day="${day}"][data-slot="${timeSlot}"]`);
+                    
+                    if (moduleSelect && teacherSelect && roomInput) {
+                        moduleSelect.value = entry.module_id;
+                        teacherSelect.value = entry.teacher_id;
+                        roomInput.value = entry.classroom || '';
+                    }
+                }
+            }
+        }
+    });
+    
+    // Fonction pour sauvegarder les modifications - doit être dans le scope global
+    function saveTimetableChanges() {
+        console.log('Fonction saveTimetableChanges appelée');
         
-        // Vérifier si Bootstrap est chargé
-        if (typeof $.fn.modal === 'undefined') {
-            console.error('Bootstrap JS non chargé');
-            alert('Erreur: Bootstrap JavaScript n\'est pas chargé correctement.');
+        const selectedWeek = document.getElementById('editWeekSelect').value;
+        console.log('Semaine sélectionnée:', selectedWeek);
+        
+        // Créer la structure de données attendue par la vue Django
+        const timetable_data = {};
+        
+        // Sélecteurs pour tous les champs d'édition
+        const moduleSelects = document.querySelectorAll('.module-select');
+        const teacherSelects = document.querySelectorAll('.teacher-select');
+        const roomInputs = document.querySelectorAll('.room-input');
+        
+        console.log('Nombre de champs trouvés:', moduleSelects.length);
+        
+        // Parcourir tous les créneaux horaires
+        moduleSelects.forEach((select, index) => {
+            const day = select.dataset.day;
+            const time_slot = select.dataset.slot;
+            const moduleId = select.value;
+            const teacherId = teacherSelects[index].value;
+            const classroom = roomInputs[index].value;
+            
+            console.log('Créneau', index, ':', day, time_slot, moduleId, teacherId, classroom);
+            
+            // Vérifier si le module et l'enseignant sont sélectionnés
+            if (moduleId && teacherId) {
+                // Initialiser le jour s'il n'existe pas
+                if (!timetable_data[day]) {
+                    timetable_data[day] = {};
+                }
+                
+                // Ajouter le créneau horaire
+                timetable_data[day][time_slot] = {
+                    module_id: parseInt(moduleId),
+                    teacher_id: parseInt(teacherId),
+                    classroom: classroom,
+                    notes: ''
+                };
+            }
+        });
+        
+        console.log('Données à envoyer:', timetable_data);
+        
+        if (Object.keys(timetable_data).length === 0) {
+            alert('Aucune modification à enregistrer.');
             return;
         }
         
-        // Fonction pour ouvrir le modal manuellement
-        function openTimetableModal() {
-            console.log('Tentative d\'ouverture du modal');
-            $('#timetableModal').modal('show');
-        }
+        // Afficher un indicateur de chargement
+        const saveBtn = document.getElementById('saveChangesBtn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enregistrement...';
+        saveBtn.disabled = true;
         
-        // Fonction pour fermer le modal
-        function closeTimetableModal() {
-            $('#timetableModal').modal('hide');
-        }
+        // DEBUG: Afficher l'URL complète
+        const url = '{% url "dashboard:save_timetable_data" %}';
+        console.log('URL:', url);
         
-        // Ajouter les écouteurs d'événements aux boutons
-        var modalButtons = document.querySelectorAll('[data-target="#timetableModal"]');
-        console.log('Boutons trouvés:', modalButtons.length);
-        
-        modalButtons.forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Bouton cliqué');
-                openTimetableModal();
+        // Envoyer les données au serveur
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                timetable_data: timetable_data,
+                week: selectedWeek 
+            })
+        })
+        .then(response => {
+            console.log('Statut de la réponse:', response.status, response.statusText);
+            return response.json().then(data => {
+                return {
+                    status: response.status,
+                    data: data
+                };
             });
+        })
+        .then(({status, data}) => {
+            console.log('Réponse complète:', {status, data});
+            if (status === 200 && data.success) {
+                alert('Modifications enregistrées avec succès!');
+                $('#timetableModal').modal('hide');
+                window.location.reload();
+            } else {
+                const errorMessage = data.error || data.message || 'Erreur inconnue du serveur';
+                alert('Erreur: ' + errorMessage);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur complète:', error);
+            alert('Erreur réseau: ' + error.message);
+        })
+        .finally(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
         });
-        
-        // Gérer le bouton de fermeture
-        var closeButtons = document.querySelectorAll('[data-dismiss="modal"], .close');
-        closeButtons.forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                closeTimetableModal();
-            });
-        });
-        
-        // Test: ouvrir le modal automatiquement après 1 seconde pour debug
-        setTimeout(function() {
-            console.log('Test automatique d\'ouverture de modal');
-            // $('#timetableModal').modal('show'); // Décommentez pour tester
-        }, 1000);
-    });
-</script>
+    }
+    
+    // Fonction utilitaire pour récupérer le token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    </script>
 {% endblock %}
