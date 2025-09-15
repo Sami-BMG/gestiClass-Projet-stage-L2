@@ -43,8 +43,22 @@ class User(AbstractUser):
         permissions = [
         ("peut_acceder_module", "Peut acceder au module"),  
         ("peut_acceder_aux_eleve", "Peut acceder aux eleves"), 
-        ("peut_acceder_aux_enseigants", "peut_acceder_aux_enseigants"),  
-        ("peut_acceder_aux_roles", "peut_acceder_aux_roles"),  
+        ("peut_acceder_aux_enseigants", "peut acceder aux enseigants"),  
+        ("peut_acceder_aux_roles", "peut acceder aux roles"),  
+        
+        
+        ("can_assign_roles", "Peut assigner des rôles aux utilisateurs"),
+
+        
+        ("peut_acceder_au_student_dashboard", "Peut accéder au tableau de bord étudiant"),
+        ("peut_acceder_au_dashboard", "Peut accéder au tableau de bord enseignant"),
+        ("peut_acceder_au_admin_dashboard", "Peut accéder au tableau de bord administrateur"),
+        
+        ("peut_voir_notes", "Peut voir toutes les notes"),
+        ("peut voir_ses_notes", "Peut voir ses propres notes"),
+        ("peut voir_student_list", "Peut voir la liste des étudiants"),
+        ("peut voir_teacher_list", "Peut voir la liste des enseignants"),
+        
 
         ]   
     
@@ -56,7 +70,6 @@ class Student(models.Model):
     
     class Meta:
         permissions = [
-            ("can_assign_roles", "Peut assigner des rôles aux utilisateurs"),
         ]
     
     def __str__(self):

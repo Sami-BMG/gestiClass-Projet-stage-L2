@@ -3,13 +3,16 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">{{ chart_title }}</h2>
+    <h2 class="mb-4">Moyennes par module</h2>
     
     <div class="card">
         <div class="card-body">
             <canvas id="moduleChart" width="400" height="200"></canvas>
         </div>
     </div>
+
+    <!-- Message d'erreur -->
+    <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
 </div>
 {% endblock %}
 
@@ -18,21 +21,27 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     fetch("{% url 'module_chart_data' %}")
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur de réseau');
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Données reçues:', data); // Pour debugger
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
             const ctx = document.getElementById('moduleChart').getContext('2d');
             
             new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: data.labels,
-                    datasets: [{
-                        label: data.providers[0],
-                        data: data.datasets[0],
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
+                    datasets: data.datasets
                 },
                 options: {
                     responsive: true,
@@ -49,6 +58,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             title: {
                                 display: true,
                                 text: 'Modules'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
                             }
                         }
                     },
@@ -56,12 +69,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         title: {
                             display: true,
                             text: 'Moyennes des notes par module'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
                         }
                     }
                 }
             });
         })
-        .catch(error => console.error('Error loading chart data:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Erreur de chargement des données: ' + error.message);
+        });
+
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
 });
 </script>
 {% endblock %}

@@ -357,8 +357,7 @@ def remove_user_role(request, user_id):
         return redirect('dashboard:home')
         
         
-    user_type = user.profil  # Cette ligne était manquante
-
+    user_type = user.profil 
     
     if request.method == 'POST':
         role_id = request.POST.get('role_id')

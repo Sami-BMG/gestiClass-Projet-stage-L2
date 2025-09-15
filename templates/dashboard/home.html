@@ -22,15 +22,16 @@
                             <p><strong>{{ user.username }}</strong> ({{ user.get_profil_display }})</p>
                             
                             <div class="mt-3">
-                                {% if user.profil == 'admin' %}
+                                {% if {% if perms.dashboard.peut_acceder_au_admin_dashboard %}
+                                %}
                                     <a href="{% url 'admin_dashboard' %}" class="btn btn-primary">
                                         Tableau de bord Admin
                                     </a>
-                                {% elif user.profil == 'teacher' %}
+                                {% elif perms.dashboard.peut_acceder_au_teacher_dashboard %}
                                     <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary">
                                         Tableau de bord Enseignant
                                     </a>
-                                {% elif user.profil == 'student' %}
+                                {% elif perms.dashboard.peut_student_au_admin_dashboard %}
                                     <a href="{% url 'student_dashboard' %}" class="btn btn-primary">
                                         Tableau de bord Élève
                                     </a>

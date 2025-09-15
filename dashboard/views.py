@@ -9,7 +9,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages as django_messages
 from datetime import datetime,timedelta
 from django.utils import timezone
-
 import calendar
 from accounts.models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo,Note
 from django.db import models
@@ -141,8 +140,6 @@ def module_chart_data(request):
     Vue qui retourne les données pour le graphique des moyennes par module
     """
     try:
-        # Récupérer les moyennes par module
-        # Adaptez cette requête selon votre structure de données
         modules_data = Note.objects.values('module__nom').annotate(
             moyenne=Avg('valeur')
         ).order_by('module__nom')
