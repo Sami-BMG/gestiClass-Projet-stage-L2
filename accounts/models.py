@@ -51,7 +51,7 @@ class User(AbstractUser):
 
         
         ("peut_acceder_au_student_dashboard", "Peut accéder au tableau de bord étudiant"),
-        ("peut_acceder_au_dashboard", "Peut accéder au tableau de bord enseignant"),
+        ("peut_acceder_au_teacher_dashboard", "Peut accéder au tableau de bord enseignant"),
         ("peut_acceder_au_admin_dashboard", "Peut accéder au tableau de bord administrateur"),
         
         ("peut_voir_notes", "Peut voir toutes les notes"),
@@ -163,7 +163,7 @@ class Result(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
     score = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="Note")
     exam_date = models.DateField(verbose_name="Date de l'examen")
-    semester = models.CharField(max_length=2, choices=SEMESTER_CHOICES, verbose_name="Semestre")
+    semester = models.CharField(max_length=2, choices=SEMESTER_CHOICES,default='S1',  verbose_name="Semestre")
     comments = models.TextField(blank=True, verbose_name="Commentaires")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

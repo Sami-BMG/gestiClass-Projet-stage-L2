@@ -95,7 +95,7 @@ urlpatterns = [
          name='delete_result'),
     path('results/bulletin/<int:student_id>/', views.generate_bulletin,
          name='generate_bulletin'),
-    
+    path('module/<int:module_id>/add-grades/', views.add_grades, name='add_grades'),
     
      # URLs pour le contact et les informations
     path('contact/', views.contact,

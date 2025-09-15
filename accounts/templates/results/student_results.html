@@ -56,16 +56,21 @@
                         <div class="col-md-6">
                             <p><strong>Moyenne générale:</strong> 
                                 <span class="badge bg-{% if average >= 10 %}success{% else %}danger{% endif %} fs-6">
-                                    {{ average }}/20
+                                    {{ average|floatformat:2 }}/20
                                 </span>
                             </p>
-                            <p><strong>Nombre de modules:</strong> {{ results.count }}</p>
+                            <p><strong>Rang général:</strong> 
+                                {% if rank %}
+                                <span class="badge bg-dark fs-6">#{{ rank }}</span>
+                                {% else %}
+                                <span class="text-muted">Non classé</span>
+                                {% endif %}
+                            </p>
                             <p><strong>Statut:</strong> 
                                 <span class="badge bg-{% if average >= 10 %}success{% else %}danger{% endif %}">
                                     {% if average >= 10 %}Validé{% else %}Non validé{% endif %}
                                 </span>
                             </p>
-                                
                         </div>
                     </div>
                 </div>
@@ -75,8 +80,51 @@
             <div class="card bg-{% if average >= 10 %}success{% else %}danger{% endif %} text-white">
                 <div class="card-body text-center">
                     <h6 class="card-title">MOYENNE GÉNÉRALE</h6>
-                    <h1 class="display-4 fw-bold">{{ average }}</h1>
+                    <h1 class="display-4 fw-bold">{{ average|floatformat:2 }}</h1>
                     <p class="mb-0">/20</p>
+                    {% if rank %}
+                    <p class="mt-2 mb-0">Rang: #{{ rank }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques détaillées -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Meilleure note</h6>
+                    <h3>{{ stats.highest_score }}/20</h3>
+                    <p class="mb-0">{{ stats.highest_module }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Plus faible note</h6>
+                    <h3>{{ stats.lowest_score }}/20</h3>
+                    <p class="mb-0">{{ stats.lowest_module }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Modules validés</h6>
+                    <h3>{{ stats.passed_modules }}</h3>
+                    <p class="mb-0">/ {{ stats.total_modules }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Taux de réussite</h6>
+                    <h3>{{ stats.success_rate }}%</h3>
+                    <p class="mb-0">Modules validés</p>
                 </div>
             </div>
         </div>
@@ -85,7 +133,9 @@
     <!-- Tableau détaillé des notes par module -->
     <div class="card shadow mb-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="m-0"><i class="fas fa-table me-2"></i>Détail des notes par module</h5>
+            <h5 class="card-title mb-0">
+                <i class="fas fa-table me-2"></i>Détail des notes par module
+            </h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -170,48 +220,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Résumé statistique -->
-            {% if results %}
-            <div class="row mt-4">
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="card-title">Modules validés</h6>
-                            <h3 class="text-success">{{ results_validés }}</h3>
-                            <p class="mb-0">/ {{ results.count }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="card-title">Moyenne générale</h6>
-                            <h3 class="text-primary">{{ average }}</h3>
-                            <p class="mb-0">/20</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="card-title">Meilleure note</h6>
-                            <h3 class="text-success">{{ meilleure_note }}</h3>
-                            <p class="mb-0">/20</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="card-title">Plus faible note</h6>
-                            <h3 class="text-danger">{{ plus_faible_note }}</h3>
-                            <p class="mb-0">/20</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
@@ -249,16 +257,6 @@
 /* En-tête d'impression masqué à l'écran */
 .print-header {
     display: none;
-}
-
-/* Styles pour le tableau */
-.table th {
-    background: linear-gradient(45deg, #4361ee, #3a0ca3);
-    color: white;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(67, 97, 238, 0.1);
 }
 </style>
 

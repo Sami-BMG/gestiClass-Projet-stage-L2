@@ -137,38 +137,54 @@ def student_dashboard(request):
 @require_GET
 def module_chart_data(request):
     """
-    Vue qui retourne les données pour le graphique des moyennes par module
+    Vue qui retourne les données pour le graphique des notes par module
     """
     try:
-        modules_data = Note.objects.values('module__nom').annotate(
-            moyenne=Avg('valeur')
-        ).order_by('module__nom')
+        # Récupérer toutes les notes avec les informations des modules et étudiants
+        notes = Note.objects.select_related('module', 'student').all().order_by('module__name', 'student__username')
+        
+        # Grouper les notes par module
+        notes_by_module = {}
+        for note in notes:
+            module_name = note.module.name
+            if module_name not in notes_by_module:
+                notes_by_module[module_name] = []
+            notes_by_module[module_name].append({
+                'student': f"{note.student.first_name} {note.student.last_name}",
+                'note': float(note.value),
+                'date': note.date.strftime('%Y-%m-%d')
+            })
         
         # Préparer les données pour le graphique
-        labels = [item['module'] for item in Module]
-        datasets = [round(float(item['moyenne'] or 0), 2) for item in modules_data]
+        labels = list(notes_by_module.keys())
+        
+        # Pour chaque module, extraire la liste des notes
+        datasets = []
+        for module_name, notes_list in notes_by_module.items():
+            notes_values = [note['note'] for note in notes_list]
+            datasets.append({
+                'label': module_name,
+                'data': notes_values,
+                'backgroundColor': f'rgba({random.randint(0, 255)}, {random.randint(0, 255)}, {random.randint(0, 255)}, 0.2)',
+                'borderColor': f'rgba({random.randint(0, 255)}, {random.randint(0, 255)}, {random.randint(0, 255)}, 1)',
+                'borderWidth': 1
+            })
         
         data = {
-            'labels': labels,
-            'datasets': [datasets],
-            'providers': ['Moyennes générales']  # Vous pouvez avoir plusieurs providers
+            'labels': ['Étudiants'],  # Label général pour l'axe X
+            'datasets': datasets,
+            'notes_detail': notes_by_module  # Détails supplémentaires si besoin
         }
         
         return JsonResponse(data)
     
     except Exception as e:
-        # En cas d'erreur, retourner des données d'exemple
-        labels = ['Mathématiques', 'Physique', 'Informatique', 'Anglais', 'Histoire']
-        datasets = [14.5, 12.8, 15.2, 13.7, 11.9]
-        
-        data = {
-            'labels': labels,
-            'datasets': [datasets],
-            'providers': ['Moyennes générales'],
-            'error': str(e)
-        }
-        return JsonResponse(data)
-    
+        return JsonResponse({
+            'error': f'Erreur lors de la récupération des notes: {str(e)}',
+            'labels': [],
+            'datasets': []
+        }, status=500)
+
 
 # ============ VUES DE MODIFICATIONS ============
 @login_required

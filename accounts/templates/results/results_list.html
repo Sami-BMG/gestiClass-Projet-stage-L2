@@ -69,6 +69,42 @@
         </div>
     </div>
 
+    <!-- Statistiques générales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Moyenne générale</h6>
+                    <h3>{{ global_stats.average|floatformat:2 }}/20</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Plus forte note</h6>
+                    <h3>{{ global_stats.highest_score }}/20</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Plus faible note</h6>
+                    <h3>{{ global_stats.lowest_score }}/20</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white text-center">
+                <div class="card-body">
+                    <h6 class="card-title">Nombre de résultats</h6>
+                    <h3>{{ global_stats.total_results }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tableau des résultats -->
     <div class="card shadow">
         <div class="card-header py-3">
@@ -83,6 +119,7 @@
                             <th>Module</th>
                             <th>Note</th>
                             <th>Mention</th>
+                            <th>Rang</th>
                             <th>Semestre</th>
                             <th>Date examen</th>
                             <th>Actions</th>
@@ -92,12 +129,12 @@
                         {% for result in results %}
                         <tr>
                             <td>
-                                <a>
+                                <a href="{% url 'accounts:student_results' result.student.id %}">
                                     {{ result.student.get_full_name }}
                                 </a>
                             </td>
                             <td>
-                                <a >
+                                <a href="{% url 'accounts:module_detail' result.module.id %}">
                                     {{ result.module.code }} - {{ result.module.name }}
                                 </a>
                             </td>
@@ -108,6 +145,13 @@
                                 <span class="badge {% if result.score >= 16 %}bg-success{% elif result.score >= 14 %}bg-primary{% elif result.score >= 12 %}bg-info{% elif result.score >= 10 %}bg-warning{% else %}bg-danger{% endif %}">
                                     {{ result.get_grade }}
                                 </span>
+                            </td>
+                            <td class="text-center">
+                                {% if result.rank %}
+                                <span class="badge bg-dark">#{{ result.rank }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
                             </td>
                             <td>{{ result.get_semester_display }}</td>
                             <td>{{ result.exam_date|date:"d/m/Y" }}</td>
@@ -132,7 +176,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center">Aucun résultat enregistré</td>
+                            <td colspan="8" class="text-center">Aucun résultat enregistré</td>
                         </tr>
                         {% endfor %}
                     </tbody>

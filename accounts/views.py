@@ -934,6 +934,54 @@ def module_results(request, module_id):
     }
     return render(request, 'accounts/module_results.html', context)
 
+@login_required
+def add_grades(request, module_id):
+    module = get_object_or_404(Module, id=module_id)
+    students = User.objects.filter(profil='student')
+    
+    if request.method == 'POST':
+        for student in students:
+            score_key = f'score_{student.id}'
+            exam_date_key = f'exam_date_{student.id}'
+            comments_key = f'comments_{student.id}'
+            
+            if score_key in request.POST and request.POST[score_key]:
+                try:
+                    score = float(request.POST[score_key])
+                    exam_date = request.POST[exam_date_key]
+                    comments = request.POST.get(comments_key, '')
+                    
+                    # Fournir une valeur par défaut si module.semester est None
+                    semester = module.semester if module.semester else 'S1'
+                    
+                    result, created = Result.objects.update_or_create(
+                        student=student,
+                        module=module,
+                        defaults={
+                            'score': score,
+                            'exam_date': exam_date,
+                            'comments': comments,
+                            'semester': semester
+                        }
+                    )
+                except ValueError:
+                    messages.error(request, f"Valeur de note invalide pour {student.get_full_name()}")
+        
+        messages.success(request, "Les notes ont été enregistrées avec succès.")
+        return redirect('accounts:modules_list')
+    
+    existing_results = {}
+    for result in Result.objects.filter(module=module):
+        existing_results[result.student.id] = result
+    
+    context = {
+        'module': module,
+        'students': students,
+        'existing_results': existing_results,
+    }
+    
+    return render(request, 'modules/add_grades.html', context)
+
 
 @login_required
 def create_result(request):
