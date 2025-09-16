@@ -696,6 +696,7 @@ def modules_list(request):
     return render(request, 'modules/list.html', context)
 
 
+
 @login_required
 @permission_required('accounts.can_add_module', raise_exception=True)
 def create_module(request):
@@ -715,13 +716,16 @@ def create_module(request):
                 messages.error(request, "Ce code de module est déjà utilisé.")
                 return redirect('accounts:modules_list')
             
-            # Créer le module
+            # Créer le module avec les nouveaux champs
             module = Module.objects.create(
                 name=request.POST['name'],
                 code=code,
                 coefficient=request.POST.get('coefficient', 1),
                 credit=request.POST.get('credit', 1),
                 description=request.POST.get('description', ''),
+                cm_hours=request.POST.get('cm_hours', 0),
+                td_hours=request.POST.get('td_hours', 0),
+                tp_hours=request.POST.get('tp_hours', 0),
             )
             
             # Assigner le semestre si fourni
@@ -746,7 +750,6 @@ def create_module(request):
     
     return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
 
-
 @login_required
 @permission_required('accounts.can_change_module', raise_exception=True)
 def update_module(request, module_id):
@@ -768,12 +771,15 @@ def update_module(request, module_id):
                 messages.error(request, "Ce code de module est déjà utilisé par un autre module.")
                 return redirect('accounts:modules_list')
             
-            # Mise à jour des informations
+            # Mise à jour des informations avec les nouveaux champs
             module.name = request.POST['name']
             module.code = code
             module.coefficient = request.POST.get('coefficient', 1)
             module.credit = request.POST.get('credit', 1)
             module.description = request.POST.get('description', '')
+            module.cm_hours = request.POST.get('cm_hours', 0)
+            module.td_hours = request.POST.get('td_hours', 0)
+            module.tp_hours = request.POST.get('tp_hours', 0)
             
             # Semestre
             semester = request.POST.get('semester')
@@ -815,6 +821,7 @@ def update_module(request, module_id):
         'teachers': teachers,
         'semesters': semesters
     })
+
 
 
 @login_required

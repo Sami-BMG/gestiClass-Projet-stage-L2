@@ -8,7 +8,7 @@
             <h2><i class="fas fa-book me-2"></i>Modifier le Module</h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
-                <li>Modules</li>
+                <li><a href="{% url 'accounts:modules_list' %}">Modules</a></li>
                 <li>Modifier</li>
             </ul>
         </div>
@@ -57,20 +57,17 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label for="coefficient" class="form-label">Coefficient</label>
                                         <input type="number" class="form-control" id="coefficient" name="coefficient" 
                                                value="{{ module.coefficient }}" min="1" max="10" step="0.5">
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label for="credit" class="form-label">Crédits</label>
                                         <input type="number" class="form-control" id="credit" name="credit" 
                                                value="{{ module.credit }}" min="1" max="10">
                                     </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label for="semester" class="form-label">Semestre</label>
                                         <select class="form-select" id="semester" name="semester">
                                             <option value="">Sélectionner un semestre</option>
@@ -79,6 +76,34 @@
                                             {% endfor %}
                                         </select>
                                     </div>
+                                </div>
+
+                                <!-- Nouvelle section pour le volume horaire -->
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <h6 class="border-bottom pb-2">Volume Horaire</h6>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="cm_hours" class="form-label">Heures de CM</label>
+                                        <input type="number" class="form-control" id="cm_hours" name="cm_hours" 
+                                               value="{{ module.cm_hours }}" min="0" step="0.5">
+                                        <div class="form-text">Cours Magistraux</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="td_hours" class="form-label">Heures de TD</label>
+                                        <input type="number" class="form-control" id="td_hours" name="td_hours" 
+                                               value="{{ module.td_hours }}" min="0" step="0.5">
+                                        <div class="form-text">Travaux Dirigés</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="tp_hours" class="form-label">Heures de TP</label>
+                                        <input type="number" class="form-control" id="tp_hours" name="tp_hours" 
+                                               value="{{ module.tp_hours }}" min="0" step="0.5">
+                                        <div class="form-text">Travaux Pratiques</div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="teacher" class="form-label">Enseignant</label>
                                         <select class="form-select" id="teacher" name="teacher">

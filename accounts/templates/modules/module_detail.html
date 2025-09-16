@@ -8,7 +8,7 @@
             <h2><i class="fas fa-book me-2"></i>Détails du Module</h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
-                <li>Modules</li>
+                <li><a href="{% url 'accounts:modules_list' %}">Modules</a></li>
                 <li>{{ module.code }}</li>
             </ul>
         </div>
@@ -27,16 +27,20 @@
                     <h5 class="m-0">Identifiant du Module</h5>
                 </div>
                 <div class="card-body text-center">
-                    <div class="module-icon mb-3">
-                        <i class="fas fa-book fa-4x text-primary"></i>
-                    </div>
                     
-                    <h4 class="text-primary">{{ module.name }}</h4>
+                    <h4 >{{ module.name }}</h4>
                     <p class="text-muted">{{ module.code }}</p>
                     
                     <!-- Badge de coefficient -->
                     <div class="mb-3">
-                        <span class="badge bg-info fs-6">Coefficient: {{ module.coefficient }}</span>
+                        <span class="m-0">Coefficient: {{ module.coefficient }}</span>
+                    </div>
+
+                    <!-- Badge du volume horaire total -->
+                    <div class="mb-3 ">
+                        {% with total_hours=module.cm_hours|add:module.td_hours|add:module.tp_hours %}
+                        <span >Volume horaire: {{ total_hours }}h</span>
+                        {% endwith %}
                     </div>
                 </div>
             </div>
@@ -44,7 +48,7 @@
              <!-- Enseignant responsable -->
              {% if module.teacher %}
              <div class="card shadow mt-3">
-                 <div class="card-header bg-success text-white">
+                 <div class="card-header bg-secondary text-white">
                      <h6 class="m-0"><i class="fas fa-user-tie me-1"></i>Enseignant Responsable</h6>
                  </div>
                  <div class="card-body text-center">
@@ -68,13 +72,11 @@
                      </div>
                  </div>
              </div>
-
-           
             {% endif %}
         </div>
 
         <!-- Colonne de droite - Détails complets -->
-        <div class="col-md-8">
+        <div class="col-md-8 ">
             <div class="card shadow">
                 <div class="card-header bg-light">
                     <h5 class="m-0"><i class="fas fa-info-circle me-2"></i>Informations du Module</h5>
@@ -83,14 +85,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold text-primary">Code du module</label>
+                                <label class="fw-bold ">Code du module</label>
                                 <p class="mb-0">{{ module.code }}</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold text-primary">Nom complet</label>
-                                <p class="mb-0">{{ module.name }}</p>
+                                <label class="fw-bold ">Nom complet</label>
+                                <p>{{ module.name }}</p>
                             </div>
                         </div>
                     </div>
@@ -98,20 +100,20 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold text-primary">Coefficient</label>
+                                <label class="fw-bold ">Coefficient</label>
                                 <p class="mb-0">
-                                    <span class="badge bg-info fs-6">{{ module.coefficient }}</span>
+                                    <span >{{ module.coefficient }}</span>
                                 </p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold text-primary">Enseignant responsable</label>
+                                <label class="fw-bold ">Enseignant responsable</label>
                                 <p class="mb-0">
                                     {% if module.teacher %}
-                                        <a href="{% url 'accounts:teacher_detail' module.teacher.id %}" class="text-decoration-none">
+                                        <strong class="text-muted ms-2">
                                             {{ module.teacher.get_full_name }}
-                                        </a>
+                                        </strong>
                                     {% else %}
                                         <span class="text-muted">Non assigné</span>
                                     {% endif %}
@@ -120,8 +122,50 @@
                         </div>
                     </div>
 
+                    <!-- Nouvelle section pour le volume horaire -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="info-item mb-3">
+                                <label class="fw-bold ">Volume Horaire</label>
+                                <div class="row mt-2">
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <strong class="text-muted ms-2">Cours Magistraux : </strong>
+                                            <span>{{ module.cm_hours|default:0 }}h</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <strong class="text-muted ms-2">Travaux Dirigés : </strong>
+                                            <span>{{ module.td_hours|default:0 }}h</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <strong class="text-muted ms-2">Travaux Pratiques : </strong>
+                                            <span>{{ module.tp_hours|default:0 }}h</span>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div  class="badge bg-primary me-2">
+                                            <span >Total : </span>
+                                            <strong >
+                                                {% with total_hours=module.cm_hours|add:module.td_hours|add:module.tp_hours %}
+                                                    {{ total_hours }}h
+                                                {% endwith %}
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="info-item mb-3">
-                        <label class="fw-bold text-primary">Description</label>
+                        <label class="fw-bold ">Description</label>
                         <p class="mb-0">
                             {% if module.description %}
                                 {{ module.description|linebreaks }}
@@ -130,141 +174,11 @@
                             {% endif %}
                         </p>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-item mb-3">
-                                <label class="fw-bold text-primary">Date de création</label>
-                                <p class="mb-0">{{ module.created_at|date:"d/m/Y à H:i" }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item mb-3">
-                                <label class="fw-bold text-primary">Dernière modification</label>
-                                <p class="mb-0">
-                                    {% if module.updated_at %}
-                                        {{ module.updated_at|date:"d/m/Y à H:i" }}
-                                    {% else %}
-                                        <span class="text-muted">Non modifié</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </div>
-
-            <!-- Section statistiques -->
-            <div class="card shadow mt-3">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="m-0"><i class="fas fa-chart-pie me-2"></i>Statistiques</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h3 class="text-primary">0</h3>
-                                <p class="text-muted mb-0">Étudiants inscrits</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h3 class="text-success">0</h3>
-                                <p class="text-muted mb-0">Cours programmés</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h3 class="text-warning">0</h3>
-                                <p class="text-muted mb-0">Heures totales</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section admin seulement -->
-            {% if is_admin %}
-            <div class="card shadow mt-3">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="m-0"><i class="fas fa-shield-alt me-2"></i>Zone Administrateur</h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Cette section est visible uniquement par les administrateurs.
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-item mb-3">
-                                <label class="fw-bold text-warning">ID du module</label>
-                                <p class="mb-0">{{ module.id }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item mb-3">
-                                <label class="fw-bold text-warning">Référence technique</label>
-                                <p class="mb-0">
-                                    <code>MOD-{{ module.id|stringformat:"04d" }}</code>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="{% url 'update_module' module.id %}" class="btn btn-warning">
-                            <i class="fas fa-edit me-1"></i> Modifier le module
-                        </a>
-                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <i class="fas fa-trash me-1"></i> Supprimer le module
-                        </button>
-                        <a href="#" class="btn btn-outline-info">
-                            <i class="fas fa-copy me-1"></i> Dupliquer le module
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Modal de suppression (admin seulement) -->
-{% if is_admin %}
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Confirmer la suppression</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir supprimer le module <strong>{{ module.code }} - {{ module.name }}</strong> ?</p>
-                <p class="text-danger">
-                    <i class="fas fa-exclamation-triangle me-1"></i>
-                    Cette action est irréversible. Toutes les données associées à ce module seront perdues.
-                </p>
-                {% if module.teacher %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    Attention : Ce module est actuellement assigné à {{ module.teacher.get_full_name }}.
-                </div>
-                {% endif %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <form method="POST" action="{% url 'delete_module' module.id %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i> Confirmer la suppression
-                    </button>
-                </form>
             </div>
         </div>
     </div>
 </div>
-{% endif %}
 {% endblock %}
 
 {% block extra_css %}
@@ -316,7 +230,7 @@
 
 /* Style pour la zone admin */
 .card-header.bg-warning {
-    background: linear-gradient(45deg, #ffc107, #ff9800) !important;
+    background: linear-gradient() !important;
 }
 </style>
 {% endblock %}

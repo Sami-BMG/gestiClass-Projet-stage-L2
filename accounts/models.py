@@ -67,7 +67,8 @@ class User(AbstractUser):
         ("cans_view_results", "Peut voir les résultats"),
         ("can_view_own_results", "Peut voir ses propres résultats"),
 
-        
+        ("can_view_section__admin", "Peut voir la d'administration des section"),
+
         # Gestion des rôles
         ("view_role", "Peut voir les rôles"),
         ("add_role", "Peut ajouter un rôle"),
@@ -160,6 +161,10 @@ class Module(models.Model):
         limit_choices_to={'profil': 'teacher'},
         verbose_name="Enseignant"
     )
+    
+    cm_hours = models.FloatField(default=0, verbose_name="Heures de CM")
+    td_hours = models.FloatField(default=0, verbose_name="Heures de TD")
+    tp_hours = models.FloatField(default=0, verbose_name="Heures de TP")
     
     def __str__(self):
         return f"{self.code} - {self.name}"
