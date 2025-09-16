@@ -12,6 +12,7 @@
             {% if perms.accounts.peut_acceder_aux_enseignants %}
             <li><a href="{% url 'accounts:teachers_list' %}" ><i class="fas fa-chalkboard-teacher"></i> Enseignants</a></li>
             {% endif %}
+            
             {% if perms.accounts.peut_acceder_module %}
             <li><a href="{% url 'accounts:modules_list' %}"><i class="fas fa-book"></i> Modules</a></li>
             {% endif %}

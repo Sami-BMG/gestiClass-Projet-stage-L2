@@ -35,16 +35,17 @@ def home(request):
     """Vue principale qui redirige vers le tableau de bord approprié"""
     if not request.user.is_authenticated:
         return redirect('login')
-    
-    # Redirection basée sur le profil de l'utilisateur
-    if request.user.profil == 'admin':
+        # Rediriger en fonction du rôle de l'utilisateur
+    if request.user.has_perm('accounts.peut_acceder_au_admin_dashboard'):
         return redirect('dashboard:admin_dashboard')
-    elif request.user.profil == 'teacher':
+    elif request.user.has_perm('accounts.peut_acceder_au_teacher_dashboard'):
         return redirect('dashboard:teacher_dashboard')
-    elif request.user.profil == 'student':
+    elif request.user.has_perm('accounts.peut_acceder_au_student_dashboard'):
         return redirect('dashboard:student_dashboard')
-    else:
-        return render(request, 'accounts/login.html')
+    return redirect('accounts:login')
+    
+    
+    
 def is_admin(user):
     return user.is_authenticated and hasattr(user, 'profil') and user.profil == 'admin'
 
@@ -324,6 +325,7 @@ def get_suggestion_detail(request):
 
 # ============ VUES DU PLANNING ============
 @login_required
+@permission_required('accounts.view_timetable', raise_exception=True)
 def timetable_view(request):
     # Déterminer la semaine actuelle
     week_param = request.GET.get('week')
@@ -432,7 +434,7 @@ def get_timetable_data(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 @login_required
-@permission_required('planning.can_manage_timetable', raise_exception=True)
+@permission_required('accounts.manage_timetable', raise_exception=True)
 def save_timetable_data(request):
     """Sauvegarder les données d'emploi du temps"""
     try:

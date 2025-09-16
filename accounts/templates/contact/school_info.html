@@ -88,7 +88,7 @@
                     <i class="fas fa-school fa-4x text-muted mb-3"></i>
                     <h4>Informations non disponibles</h4>
                     <p class="text-muted">Les informations sur l'école ne sont pas encore configurées.</p>
-                    {% if user.is_superuser or user.is_staff %}
+                    {% if perms.accounts.can_add_schoolinfo %}
                     <a href="/admin/accounts/schoolinfo/add/" class="btn btn-primary mt-3">
                         <i class="fas fa-plus me-1"></i> Ajouter les informations
                     </a>
@@ -148,7 +148,7 @@
                         <a href="{% url 'accounts:faq_list' %}" class="btn btn-outline-info">
                             <i class="fas fa-question-circle me-1"></i> FAQ
                         </a>
-                        {% if user.is_superuser or user.is_staff %}
+                        {% if perms.accounts.can_change_schoolinfo %}
                         <a href="/admin/accounts/schoolinfo/{% if school_info %}{{ school_info.id }}/change/{% else %}add/{% endif %}" 
                            class="btn btn-outline-warning">
                             <i class="fas fa-cog me-1"></i> Modifier les infos

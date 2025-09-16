@@ -43,22 +43,56 @@ class User(AbstractUser):
         permissions = [
         ("peut_acceder_module", "Peut acceder au module"),  
         ("peut_acceder_aux_eleve", "Peut acceder aux eleves"), 
-        ("peut_acceder_aux_enseigants", "peut acceder aux enseigants"),  
+        ("peut_acceder_aux_enseignants", "peut acceder aux enseigants"),  
         ("peut_acceder_aux_roles", "peut acceder aux roles"),  
         
-        
-        ("can_assign_roles", "Peut assigner des rôles aux utilisateurs"),
-
-        
+        #les dashboards
         ("peut_acceder_au_student_dashboard", "Peut accéder au tableau de bord étudiant"),
         ("peut_acceder_au_teacher_dashboard", "Peut accéder au tableau de bord enseignant"),
         ("peut_acceder_au_admin_dashboard", "Peut accéder au tableau de bord administrateur"),
         
-        ("peut_voir_notes", "Peut voir toutes les notes"),
-        ("peut voir_ses_notes", "Peut voir ses propres notes"),
-        ("peut voir_student_list", "Peut voir la liste des étudiants"),
-        ("peut voir_teacher_list", "Peut voir la liste des enseignants"),
         
+        
+        #les listes
+        ("can_view_student_list", "Peut voir la liste des étudiants"),
+        ("can_view_teacher_list", "Peut voir la liste des enseignants"),
+        ("can_view_module_list", "Peut voir la liste des modules"),
+        ("can_view_results_list", "Peut voir la liste résultats"),
+        
+        #les détails
+        ("can_view_module_details", "Peut les details d'un module"),
+        ("can_view_student_details", "Peut voir les détails d'un étudiant"),
+        ("can_view_teacher_details", "Peut voir les détails d'un enseignant"),
+        ("can_view_own_details", "Peut voir ses propres détails"),
+        ("cans_view_results", "Peut voir les résultats"),
+        ("can_view_own_results", "Peut voir ses propres résultats"),
+
+        
+        # Gestion des rôles
+        ("view_role", "Peut voir les rôles"),
+        ("add_role", "Peut ajouter un rôle"),
+        ("change_role", "Peut modifier un rôle"),
+        ("delete_role", "Peut supprimer un rôle"),
+        ("assign_role", "Peut assigner des rôles"),
+        
+        
+        # Planning
+        ("view_timetable", "Peut voir l'emploi du temps"),
+        ("manage_timetable", "Peut gérer l'emploi du temps"),
+
+        #creation de comptes pour les enseignants et les élèves
+        ("can_add_teacher", "Peut ajouter un enseignant"),
+        ("can_add_student", "Peut ajouter un étudiant"),
+        ("can_change_teacher", "Peut modifier un enseignant"),
+        ("can_change_student", "Peut modifier un étudiant"),
+        ("can_delete_teacher", "Peut supprimer un enseignant"),
+        ("can_delete_student", "Peut supprimer un étudiant"),
+        
+        #informations sur l'école
+        ("can_view_schoolinfo", "Peut voir les informations de l'école"),
+        ("can_add_schoolinfo", "Peut ajouter les informations de l'école"),
+        ("can_change_schoolinfo", "Peut modifier les informations de l'école"),
+        ("can_delete_schoolinfo", "Peut supprimer les informations de l'école"),
 
         ]   
     
@@ -74,6 +108,12 @@ class Student(models.Model):
     
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} ({self.student_id})"
+    
+    class Meta:
+        permissions = [
+            ("can_view_her_details", "Peut voir ses détails "),
+        ]
+    
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -85,6 +125,10 @@ class Teacher(models.Model):
     
     class Meta:
         ordering = ['user__last_name', 'user__first_name']
+        
+        permissions = [
+            ("can_view_teacher_details", "Peut voir ses  détails d'un enseignant"),
+        ]
 
 class Module(models.Model):
     SEMESTER_CHOICES = [

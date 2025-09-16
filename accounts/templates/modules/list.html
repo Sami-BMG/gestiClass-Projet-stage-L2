@@ -43,6 +43,7 @@
                             <th>Code</th>
                             <th>Nom</th>
                             <th>Coefficient</th>
+                            <th>Volume horaire</th>
                             <th>Enseignant responsable</th>
                             <th>Actions</th>
                         </tr>
@@ -53,6 +54,15 @@
                             <td>{{ module.code }}</td>
                             <td>{{ module.name }}</td>
                             <td>{{ module.coefficient }}</td>
+                            <td>
+                                {% if module.cm_hours or module.td_hours or module.tp_hours %}
+                                    {% if module.cm_hours %}<span class="badge bg-primary me-1">CM: {{ module.cm_hours }}h</span>{% endif %}
+                                    {% if module.td_hours %}<span class="badge bg-info me-1">TD: {{ module.td_hours }}h</span>{% endif %}
+                                    {% if module.tp_hours %}<span class="badge bg-success">TP: {{ module.tp_hours }}h</span>{% endif %}
+                                {% else %}
+                                    <span class="text-muted">Non défini</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if module.teacher %}
                                     {{ module.teacher.get_full_name }}
@@ -71,7 +81,7 @@
                                     </a>
                                     
                                     <!-- Ajouter des notes - Pour l'enseignant responsable ou les admins -->
-                                    {% if user == module.teacher or is_admin %}
+                                    {% if perms.accounts.can_add_result %}
                                     <a href="{% url 'accounts:add_grades' module.id %}" 
                                        class="btn btn-outline-success btn-sm" 
                                        data-bs-toggle="tooltip" 
@@ -80,8 +90,7 @@
                                     </a>
                                     {% endif %}
                                     
-                                    <!-- Modifier et Supprimer - UNIQUEMENT pour les admins -->
-                                    {% if is_admin %}
+                                    {% if  perms.accounts.can_change_module %}
                                     <!-- Bouton Modifier -->
                                     <a href="{% url 'accounts:update_module' module.id %}" 
                                        class="btn btn-outline-warning btn-sm" 
@@ -105,7 +114,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center">Aucun module enregistré</td>
+                            <td colspan="6" class="text-center">Aucun module enregistré</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -186,11 +195,25 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="coefficient" class="form-label">Coefficient <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="coefficient" name="coefficient" min="1" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
+                            <label for="cm_hours" class="form-label">Heures de CM</label>
+                            <input type="number" class="form-control" id="cm_hours" name="cm_hours" min="0" step="0.5">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="td_hours" class="form-label">Heures de TD</label>
+                            <input type="number" class="form-control" id="td_hours" name="td_hours" min="0" step="0.5">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="tp_hours" class="form-label">Heures de TP</label>
+                            <input type="number" class="form-control" id="tp_hours" name="tp_hours" min="0" step="0.5">
+                        </div>
+                        <div class="col-md-8 mb-3">
                             <label for="teacher" class="form-label">Enseignant responsable <span class="text-danger">*</span></label>
                             <select class="form-select" id="teacher" name="teacher" required>
                                 <option value="">Sélectionner un enseignant</option>

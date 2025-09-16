@@ -42,7 +42,7 @@
                     <p class="text-muted">@{{ user.username }}</p>
                     
                     <!-- Badge de statut admin -->
-                    {% if user.is_superuser %}
+                    {% if perms.accounts.can_view_admin_dashboard %}
                     <div class="mb-3">
                         <span class="badge bg-danger">Administrateur</span>
                     </div>
@@ -85,10 +85,7 @@
                     <div class="d-flex justify-content-between">
                         <span>Profil:</span>
                         <span class="badge bg-primary">
-                            {% if user.is_superuser %}Administrateur
-                            {% elif user.is_staff %}Staff
-                            {% else %}Utilisateur standard
-                            {% endif %}
+                            {{ user.get_profil_display }}
                         </span>
                     </div>
                     {% endif %}

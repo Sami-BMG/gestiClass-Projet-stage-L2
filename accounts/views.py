@@ -196,7 +196,7 @@ class RoleForm(forms.Form):
     )
 
 @login_required
-@permission_required(['auth.view_group', 'auth.add_group', 'auth.change_group'], raise_exception=True)
+@permission_required('accounts.assign_role', raise_exception=True)
 def role_list(request):
     """Affiche la liste de tous les rôles existants avec possibilité de création"""
     groups = Group.objects.all().prefetch_related('permissions')
@@ -306,7 +306,7 @@ def delete_role(request, role_id):
     return render(request, 'roles/delete_role.html', context)
 
 @login_required
-@permission_required('auth.change_user', raise_exception=True)
+@permission_required('accounts.assign_role', raise_exception=True)
 def assign_user_role(request, user_id, user_type):
     """Attribuer un rôle à un utilisateur spécifique (étudiant ou enseignant)"""
     
@@ -346,7 +346,6 @@ def assign_user_role(request, user_id, user_type):
 
 
 @login_required
-@permission_required('auth.change_user', raise_exception=True)
 def remove_user_role(request, user_id):
     """Retirer un rôle spécifique d'un utilisateur (étudiant ou enseignant)"""
     user = get_object_or_404(User, id=user_id)
@@ -377,6 +376,7 @@ def remove_user_role(request, user_id):
 
 # ============ VUES POUR LA GESTION DES ÉLÈVES ============
 @login_required
+@permission_required('accounts.can_view_student_list', raise_exception=True)
 def list_students(request):
     """Vue pour lister les élèves - Accessible à tous les utilisateurs connectés"""
     User = get_user_model()
@@ -390,6 +390,7 @@ def list_students(request):
 
 
 @login_required
+@permission_required('accounts.can_add_student', raise_exception=True)
 def create_student(request):
     """Vue pour créer un nouvel élève"""
     if request.method == 'POST':
@@ -424,6 +425,7 @@ def create_student(request):
 
 
 @login_required
+@permission_required('accounts.can_change_student', raise_exception=True)
 def update_student(request, student_id):
     """Vue pour modifier les informations d'un élève"""
     student = get_object_or_404(User, id=student_id)
@@ -480,6 +482,7 @@ def update_student(request, student_id):
 
 
 @login_required
+@permission_required('accounts.can_view_student_details', raise_exception=True)
 def student_detail(request, student_id):
     """Vue pour afficher les détails d'un élève"""
     student = get_object_or_404(User, id=student_id, profil='student')
@@ -491,6 +494,7 @@ def student_detail(request, student_id):
 
 
 @login_required
+@permission_required('accounts.can_delete_student', raise_exception=True)
 def delete_student(request, student_id):
     """Vue pour supprimer un élève - Admin seulement"""
     if not request.user.is_superuser:
@@ -510,6 +514,7 @@ def delete_student(request, student_id):
 
 # ============ VUES POUR LA GESTION DES ENSEIGNANTS ============
 @login_required
+@permission_required('accounts.can_view_teacher_list', raise_exception=True)
 def list_teachers(request):
     """Vue pour lister les enseignants - Accessible à tous les utilisateurs connectés"""
     teachers = User.objects.filter(profil='teacher')
@@ -523,6 +528,7 @@ def list_teachers(request):
 
 
 @login_required
+@permission_required('accounts.can_add_teacher', raise_exception=True)
 def create_teacher(request):
     """Vue pour créer un nouvel enseignant"""
     if request.method == 'POST':
@@ -562,6 +568,7 @@ def create_teacher(request):
 
 
 @login_required
+@permission_required('accounts.can_change_teacher', raise_exception=True)
 def update_teacher(request, teacher_id):
     """Vue pour modifier les informations d'un enseignant"""
     teacher = get_object_or_404(User, id=teacher_id, profil='teacher')
@@ -618,6 +625,7 @@ def update_teacher(request, teacher_id):
 
 
 @login_required
+@permission_required('accounts.can_view_teacher_details', raise_exception=True)
 def teacher_detail(request, teacher_id):
     """Vue pour afficher les détails d'un enseignant"""
     teacher = get_object_or_404(User, id=teacher_id, profil='teacher')
@@ -648,6 +656,7 @@ def delete_teacher(request, teacher_id):
 
 # ============ VUES POUR LA GESTION DES MODULES ============
 @login_required
+@permission_required('accounts.can_view_module_list', raise_exception=True)
 def modules_list(request):
     """Vue pour afficher la liste des modules"""
     modules = Module.objects.all().order_by('name')
@@ -688,6 +697,7 @@ def modules_list(request):
 
 
 @login_required
+@permission_required('accounts.can_add_module', raise_exception=True)
 def create_module(request):
     """Vue pour créer un nouveau module"""
     if request.method == 'POST':
@@ -738,6 +748,7 @@ def create_module(request):
 
 
 @login_required
+@permission_required('accounts.can_change_module', raise_exception=True)
 def update_module(request, module_id):
     """Vue pour modifier un module"""
     module = get_object_or_404(Module, id=module_id)
@@ -807,6 +818,7 @@ def update_module(request, module_id):
 
 
 @login_required
+@permission_required('accounts.can_view_module_details', raise_exception=True)
 def module_detail(request, module_id):
     """Vue pour afficher les détails d'un module"""
     module = get_object_or_404(Module, id=module_id)
@@ -818,6 +830,7 @@ def module_detail(request, module_id):
 
 
 @login_required
+@permission_required('accounts.can_delete_module', raise_exception=True)
 def delete_module(request, module_id):
     """Vue pour supprimer un module - Admin seulement"""
     if not request.user.is_superuser:
@@ -837,6 +850,7 @@ def delete_module(request, module_id):
 
 # ============ VUES POUR LA GESTION DES RÉSULTATS ============
 @login_required
+@permission_required('accounts.can_view_results_list', raise_exception=True)
 def results_list(request):
     """Vue pour afficher tous les résultats avec filtres"""
     # Si l'utilisateur est un étudiant, ne montrer que ses propres résultats
@@ -870,6 +884,21 @@ def results_list(request):
         ('S6', 'Semestre 6'),
     ]
     
+    # Calcul des statistiques de la classe
+    if results.exists():
+        scores = [result.score for result in results]
+        class_stats = {
+            'average': sum(scores) / len(scores),
+            'highest_score': max(scores),
+            'lowest_score': min(scores),
+        }
+    else:
+        class_stats = {
+            'average': 0,
+            'highest_score': 0,
+            'lowest_score': 0,
+        }
+    
     context = {
         'results': results,
         'students': students,
@@ -879,6 +908,7 @@ def results_list(request):
         'selected_module': module_id,
         'selected_semester': semester,
         'is_admin': request.user.is_superuser,
+        'class_stats': class_stats,  # Ajout des statistiques
         'title': 'Gestion des Résultats' if (request.user.is_staff or request.user.is_superuser) else 'Mes Résultats'
     }
     return render(request, 'results/results_list.html', context)
@@ -888,8 +918,10 @@ def results_list(request):
 def student_results(request, student_id):
     """Vue pour afficher les résultats d'un étudiant spécifique"""
     # Vérifier que l'étudiant peut seulement voir ses propres résultats
-    if request.user.profil == 'student' and str(request.user.id) != str(student_id):
-        raise PermissionDenied("Vous ne pouvez accéder qu'à vos propres résultats.")
+    if not (request.user.has_perm('accounts.cans_view_results') or 
+            (request.user.has_perm('accounts.can_view_own_results') and 
+             request.user.id == student_id)):
+        raise PermissionDenied("Vous n'êtes pas autorisé à voir ces résultats.")
     
     student = get_object_or_404(User, id=student_id, profil='student')
     results = Result.objects.filter(student=student).select_related('module')
@@ -1050,7 +1082,7 @@ def update_result(request, result_id):
         'semesters': semesters,
         'title': 'Modifier le résultat'
     }
-    return render(request, 'accounts/update_result.html', context)
+    return render(request, 'results/update_result.html', context)
 
 
 @login_required

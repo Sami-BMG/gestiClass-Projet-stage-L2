@@ -68,28 +68,31 @@
                             <td>{{ student.phone }}</td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <!-- Voir détails - Toujours visible pour tous -->
+                                    {% if perms.accounts.can_view_student_details %}
                                     <a href="{% url 'accounts:student_detail' student.id %}" 
                                        class="btn btn-outline-primary btn-sm" 
                                        data-bs-toggle="tooltip" 
                                        title="Voir détails">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
+                                    {% endif %}
+
                                     
-                                    <!-- Modifier et Supprimer - UNIQUEMENT pour les admins -->
-                                    {% if is_admin %}
-                                    <!-- Bouton Modifier (visible seulement pour les admins) -->
+                                    {% if perms.accounts.can_change_student %}
                                     <a href="{% url 'accounts:update_student' student.id %}" 
                                        class="btn btn-outline-warning btn-sm" 
                                        data-bs-toggle="tooltip" 
                                        title="Modifier">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
+                                    {% endif %}
+                                    {%  if perms.accounts.can_assign_roles %}
                                     <a href="{% url 'accounts:assign_user_role' 'student' student.id %}" 
                                     class="btn btn-sm btn-outline-info" title="Gérer le rôle">
                                         <i class="fas fa-user-tag"></i>
                                     </a>
-                                    <!-- Bouton Supprimer (visible seulement pour les admins) -->
+                                    {% endif %}
+                                    {% if perms.accounts.can_delete_student %}
                                     <button class="btn btn-outline-danger btn-sm" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteStudentModal"

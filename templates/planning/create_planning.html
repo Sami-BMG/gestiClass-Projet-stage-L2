@@ -17,7 +17,7 @@
         
         <div class="d-flex align-items-center gap-2">
             <!-- Boutons d'action conditionnels -->
-            {% if can_edit %}
+            {% if perms.accounts.can_change_timetable %}
             <button class="btn btn-primary shadow-sm" id="editTimetableBtn" data-bs-toggle="modal" data-bs-target="#timetableModal">
                 <i class="fas fa-edit fa-sm me-2"></i>Modifier
             </button>

@@ -11,20 +11,92 @@
                 <li>Résultats</li>
             </ul>
         </div>
-        
-        {% if is_admin or user.is_staff %}
-        <div class="btn-group">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createResultModal">
-                <i class="fas fa-plus-circle me-1"></i> Ajouter un résultat
-            </button>
         </div>
-        {% endif %}
+    </div>
+
+    <!-- Statistiques de la classe - Version améliorée -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-primary h-100 py-3">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-2">
+                                Moyenne de la classe</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                {{ class_stats.average|floatformat:2 }}/20
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calculator fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-success h-100 py-3">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-2">
+                                Plus forte note</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                {{ class_stats.highest_score }}/20
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-arrow-up fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-warning h-100 py-3">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-2">
+                                Plus faible note</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                {{ class_stats.lowest_score }}/20
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-arrow-down fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-info h-100 py-3">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-2">
+                                Total des résultats</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                {{ results|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list-alt fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Filtres -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header" style="background-color: #4e73df; color: white;">
+            <h6 class="m-0">Filtres</h6>
         </div>
         <div class="card-body">
             <form method="get" class="row g-3">
@@ -62,58 +134,26 @@
                     </select>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">Filtrer</button>
-                    <a href="{% url 'accounts:results_list' %}" class="btn btn-secondary">Réinitialiser</a>
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i> Appliquer
+                    </button>
+                    <a href="{% url 'accounts:results_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-sync me-1"></i> Réinitialiser
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Statistiques générales -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Moyenne générale</h6>
-                    <h3>{{ global_stats.average|floatformat:2 }}/20</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Plus forte note</h6>
-                    <h3>{{ global_stats.highest_score }}/20</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Plus faible note</h6>
-                    <h3>{{ global_stats.lowest_score }}/20</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Nombre de résultats</h6>
-                    <h3>{{ global_stats.total_results }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Tableau des résultats -->
-    <div class="card shadow">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Liste des résultats</h6>
+    <div class="card shadow-sm">
+        <div class="card-header" style="background-color: #4e73df; color: white;">
+            <h6 class="m-0">Liste des résultats</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover" id="resultsTable">
-                    <thead class="table-light">
+                    <thead style="background-color: #f8f9fc;">
                         <tr>
                             <th>Étudiant</th>
                             <th>Module</th>
@@ -128,27 +168,19 @@
                     <tbody>
                         {% for result in results %}
                         <tr>
-                            <td>
-                                <a href="{% url 'accounts:student_results' result.student.id %}">
-                                    {{ result.student.get_full_name }}
-                                </a>
-                            </td>
-                            <td>
-                                <a href="{% url 'accounts:module_detail' result.module.id %}">
-                                    {{ result.module.code }} - {{ result.module.name }}
-                                </a>
-                            </td>
+                            <td>{{ result.student.get_full_name }}</td>
+                            <td>{{ result.module.code }} - {{ result.module.name }}</td>
                             <td class="fw-bold {% if result.score >= 10 %}text-success{% else %}text-danger{% endif %}">
                                 {{ result.score }}/20
                             </td>
                             <td>
-                                <span class="badge {% if result.score >= 16 %}bg-success{% elif result.score >= 14 %}bg-primary{% elif result.score >= 12 %}bg-info{% elif result.score >= 10 %}bg-warning{% else %}bg-danger{% endif %}">
+                                <span class="badge {% if result.score >= 16 %}bg-success{% elif result.score >= 14 %}bg-primary{% elif result.score >= 12 %}bg-info{% elif result.score >= 10 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
                                     {{ result.get_grade }}
                                 </span>
                             </td>
                             <td class="text-center">
                                 {% if result.rank %}
-                                <span class="badge bg-dark">#{{ result.rank }}</span>
+                                <span class="badge bg-secondary">#{{ result.rank }}</span>
                                 {% else %}
                                 <span class="text-muted">-</span>
                                 {% endif %}
@@ -176,7 +208,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center">Aucun résultat enregistré</td>
+                            <td colspan="8" class="text-center py-4">Aucun résultat enregistré</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -185,73 +217,7 @@
         </div>
     </div>
 </div>
-
-<!-- Modal pour ajouter un résultat -->
-{% if is_admin or user.is_staff %}
-<div class="modal fade" id="createResultModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Ajouter un résultat</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="{% url 'accounts:create_result' %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="student" class="form-label">Étudiant *</label>
-                            <select class="form-select" id="student" name="student" required>
-                                <option value="">Sélectionner un étudiant</option>
-                                {% for student in students %}
-                                <option value="{{ student.id }}">{{ student.get_full_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="module" class="form-label">Module *</label>
-                            <select class="form-select" id="module" name="module" required>
-                                <option value="">Sélectionner un module</option>
-                                {% for module in modules %}
-                                <option value="{{ module.id }}">{{ module.code }} - {{ module.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="score" class="form-label">Note *</label>
-                            <input type="number" class="form-control" id="score" name="score" 
-                                   min="0" max="20" step="0.01" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="exam_date" class="form-label">Date examen *</label>
-                            <input type="date" class="form-control" id="exam_date" name="exam_date" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="semester" class="form-label">Semestre *</label>
-                            <select class="form-select" id="semester" name="semester" required>
-                                <option value="">Sélectionner un semestre</option>
-                                {% for value, label in semesters %}
-                                <option value="{{ value }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="comments" class="form-label">Commentaires</label>
-                        <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Enregistrer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
+{% if perms.accounts.peut_acceder_module %}
 <!-- Modal de suppression -->
 <div class="modal fade" id="deleteResultModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -266,7 +232,7 @@
                 <p class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>Cette action est irréversible.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
                 <form method="post" action="" id="deleteResultForm">
                     {% csrf_token %}
                     <input type="hidden" name="result_id" id="deleteResultId">
@@ -279,24 +245,45 @@
 {% endif %}
 
 <script>
-// Gestion du modal de suppression
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteModal = document.getElementById('deleteResultModal');
-    const resultName = document.getElementById('resultName');
-    const deleteForm = document.getElementById('deleteResultForm');
-    const deleteResultId = document.getElementById('deleteResultId');
-    
-    if (deleteModal) {
-        deleteModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const resultId = button.getAttribute('data-result-id');
-            const resultNameValue = button.getAttribute('data-result-name');
-            
-            resultName.textContent = resultNameValue;
-            deleteResultId.value = resultId;
-            deleteForm.action = "{% url 'accounts:delete_result' 0 %}".replace('0', resultId);
-        });
-    }
-});
+    // Gestion du modal de suppression
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteModal = document.getElementById('deleteResultModal');
+        const resultName = document.getElementById('resultName');
+        const deleteForm = document.getElementById('deleteResultForm');
+        const deleteResultId = document.getElementById('deleteResultId');
+        
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const resultId = button.getAttribute('data-result-id');
+                const resultNameValue = button.getAttribute('data-result-name');
+                
+                resultName.textContent = resultNameValue;
+                deleteResultId.value = resultId;
+                deleteForm.action = "{% url 'accounts:delete_result' 0 %}".replace('0', resultId);
+            });
+        }
+    });
 </script>
+
+<style>
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 10px;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+    .h4 {
+        font-size: 1.5rem;
+    }
+    .card-body {
+        padding: 1.5rem;
+    }
+</style>
 {% endblock %}

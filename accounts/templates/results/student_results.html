@@ -41,90 +41,92 @@
         </div>
     </div>
 
-    <!-- Informations étudiant -->
+    <!-- Section des statistiques principales -->
     <div class="row mb-4">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Informations de l'étudiant</h5>
+                    <h5 class="card-title">Statistiques de performance</h5>
                     <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Nom complet:</strong> {{ student.get_full_name }}</p>
-                            <p><strong>Email:</strong> {{ student.email }}</p>
-                            <p><strong>Téléphone:</strong> {{ student.phone|default:"Non renseigné" }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Moyenne générale:</strong> 
-                                <span class="badge bg-{% if average >= 10 %}success{% else %}danger{% endif %} fs-6">
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Moyenne générale</h6>
+                                <h3 class="fw-bold {% if average >= 10 %}text-success{% else %}text-danger{% endif %}">
                                     {{ average|floatformat:2 }}/20
-                                </span>
-                            </p>
-                            <p><strong>Rang général:</strong> 
-                                {% if rank %}
-                                <span class="badge bg-dark fs-6">#{{ rank }}</span>
-                                {% else %}
-                                <span class="text-muted">Non classé</span>
-                                {% endif %}
-                            </p>
-                            <p><strong>Statut:</strong> 
-                                <span class="badge bg-{% if average >= 10 %}success{% else %}danger{% endif %}">
-                                    {% if average >= 10 %}Validé{% else %}Non validé{% endif %}
-                                </span>
-                            </p>
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Rang général</h6>
+                                <h3 class="fw-bold text-primary">
+                                    {% if rank %}#{{ rank }}{% else %}N/A{% endif %}
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Modules validés</h6>
+                                <h3 class="fw-bold text-info">{{ results_validés }}/{{ results|length }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Taux de réussite</h6>
+                                <h3 class="fw-bold text-warning">
+                                    {% if results|length > 0 %}
+                                        {{ results_validés|floatformat:0 }}/{{ results|length }}
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-{% if average >= 10 %}success{% else %}danger{% endif %} text-white">
+            <div class="card">
                 <div class="card-body text-center">
-                    <h6 class="card-title">MOYENNE GÉNÉRALE</h6>
-                    <h1 class="display-4 fw-bold">{{ average|floatformat:2 }}</h1>
-                    <p class="mb-0">/20</p>
+                    <h6 class="card-title text-muted">RÉSULTAT GLOBAL</h6>
+                    <div class="display-4 fw-bold {% if average >= 10 %}text-success{% else %}text-danger{% endif %}">
+                        {{ average|floatformat:2 }}
+                    </div>
+                    <p class="mb-1 text-muted">/20</p>
+                    <span class="badge bg-{% if average >= 10 %}success{% else %}danger{% endif %}">
+                        {% if average >= 10 %}Validé{% else %}Non validé{% endif %}
+                    </span>
                     {% if rank %}
-                    <p class="mt-2 mb-0">Rang: #{{ rank }}</p>
+                    <p class="mt-2 mb-0 text-muted">Rang: #{{ rank }}</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Statistiques détaillées -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-success text-white text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Meilleure note</h6>
-                    <h3>{{ stats.highest_score }}/20</h3>
-                    <p class="mb-0">{{ stats.highest_module }}</p>
+    <!-- Filtre par semestre -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="card-title mb-0">Filtrer par semestre</h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Plus faible note</h6>
-                    <h3>{{ stats.lowest_score }}/20</h3>
-                    <p class="mb-0">{{ stats.lowest_module }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Modules validés</h6>
-                    <h3>{{ stats.passed_modules }}</h3>
-                    <p class="mb-0">/ {{ stats.total_modules }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-primary text-white text-center">
-                <div class="card-body">
-                    <h6 class="card-title">Taux de réussite</h6>
-                    <h3>{{ stats.success_rate }}%</h3>
-                    <p class="mb-0">Modules validés</p>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end">
+                        <select class="form-select me-2" id="semesterFilter" style="max-width: 200px;">
+                            <option value="all">Tous les semestres</option>
+                            <option value="1">Semestre 1</option>
+                            <option value="2">Semestre 2</option>
+                            <option value="3">Semestre 3</option>
+                            <option value="4">Semestre 4</option>
+                            <option value="5">Semestre 5</option>
+                            <option value="6">Semestre 6</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" id="resetFilter">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,7 +134,7 @@
 
     <!-- Tableau détaillé des notes par module -->
     <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header bg-light text-dark">
             <h5 class="card-title mb-0">
                 <i class="fas fa-table me-2"></i>Détail des notes par module
             </h5>
@@ -140,23 +142,23 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
+                    <thead class="table-light">
                         <tr>
                             <th>Module</th>
                             <th>Code</th>
                             <th>Enseignant</th>
                             <th>Semestre</th>
-                            <th>Coefficient</th>
-                            <th>Note</th>
-                            <th>Mention</th>
-                            <th>Date examen</th>
-                            <th>Statut</th>
+                            <th class="text-center">Coefficient</th>
+                            <th class="text-center">Note</th>
+                            <th class="text-center">Mention</th>
+                            <th class="text-center">Date examen</th>
+                            <th class="text-center">Statut</th>
                             <th>Commentaires</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for result in results %}
-                        <tr>
+                        <tr class="result-row" data-semester="{{ result.semester }}">
                             <td>
                                 <strong>{{ result.module.name }}</strong>
                                 {% if result.module.description %}
@@ -165,7 +167,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge bg-secondary">{{ result.module.code }}</span>
+                                <span >{{ result.module.code }}</span>
                             </td>
                             <td>
                                 {% if result.module.teacher %}
@@ -175,16 +177,16 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge bg-info">{{ result.get_semester_display }}</span>
+                                <span class="badge bg-light text-dark">{{ result.get_semester_display }}</span>
                             </td>
                             <td class="text-center">
-                                <span class="badge bg-light text-dark">{{ result.module.coefficient }}</span>
+                                <span >{{ result.module.coefficient }}</span>
                             </td>
                             <td class="text-center fw-bold {% if result.score >= 10 %}text-success{% else %}text-danger{% endif %}">
                                 {{ result.score }}/20
                             </td>
                             <td class="text-center">
-                                <span class="badge {% if result.score >= 16 %}bg-success{% elif result.score >= 14 %}bg-primary{% elif result.score >= 12 %}bg-info{% elif result.score >= 10 %}bg-warning{% else %}bg-danger{% endif %}">
+                                <span class="badge {% if result.score >= 16 %}bg-success{% elif result.score >= 14 %}bg-primary{% elif result.score >= 12 %}bg-info{% elif result.score >= 10 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
                                     {{ result.get_grade }}
                                 </span>
                             </td>
@@ -199,13 +201,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if result.comments %}
-                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="{{ result.comments }}">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                                {% else %}
-                                <span class="text-muted">Aucun</span>
-                                {% endif %}
+                                <span>{{ result.comments|default:"Aucun commentaire" }}</span>
                             </td>
                         </tr>
                         {% empty %}
@@ -227,7 +223,7 @@
 <!-- Styles pour l'impression -->
 <style>
 @media print {
-    .btn-group, .dropdown-menu, .card-header, .no-print {
+    .btn-group, .dropdown-menu, .card-header, .no-print, #semesterFilter, #resetFilter {
         display: none !important;
     }
     
@@ -238,6 +234,7 @@
     
     .table {
         font-size: 10pt;
+        width: 100%;
     }
     
     body {
@@ -258,6 +255,25 @@
 .print-header {
     display: none;
 }
+
+/* Styles pour le tableau amélioré */
+.table th {
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Badge personnalisé pour les codes de module */
+.badge.bg-dark {
+    font-family: monospace;
+}
+
+/* Indicateur de filtre actif */
+.filter-active {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
 </style>
 
 <!-- En-tête pour l'impression -->
@@ -277,6 +293,44 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     });
+    
+    // Fonctionnalité de filtrage par semestre
+    const semesterFilter = document.getElementById('semesterFilter');
+    const resetFilter = document.getElementById('resetFilter');
+    const resultRows = document.querySelectorAll('.result-row');
+    
+    function filterResults() {
+        const selectedSemester = semesterFilter.value;
+        
+        resultRows.forEach(row => {
+            if (selectedSemester === 'all' || row.getAttribute('data-semester') === selectedSemester) {
+                row.style.display = 'table-row';
+                if (selectedSemester !== 'all') {
+                    row.classList.add('filter-active');
+                } else {
+                    row.classList.remove('filter-active');
+                }
+            } else {
+                row.style.display = 'none';
+                row.classList.remove('filter-active');
+            }
+        });
+    }
+    
+    semesterFilter.addEventListener('change', filterResults);
+    
+    resetFilter.addEventListener('click', function() {
+        semesterFilter.value = 'all';
+        filterResults();
+    });
+    
+    // Appliquer le filtre si un paramètre d'URL est présent
+    const urlParams = new URLSearchParams(window.location.search);
+    const semesterParam = urlParams.get('semester');
+    if (semesterParam && ['1', '2', '3', '4', '5', '6'].includes(semesterParam)) {
+        semesterFilter.value = semesterParam;
+        filterResults();
+    }
     
     window.addEventListener('beforeprint', function() {
         document.title = "Notes - {{ student.get_full_name }}";

@@ -1,0 +1,157 @@
+{% extends "models/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="page-title">
+        <div>
+            <h2><i class="fas fa-edit me-2"></i>Modifier le Résultat</h2>
+            <ul class="breadcrumb">
+                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li><a href="{% url 'accounts:results_list' %}">Résultats</a></li>
+                <li>Modifier</li>
+            </ul>
+        </div>
+        <a href="{% url 'accounts:results_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="m-0"><i class="fas fa-edit me-2"></i>Modifier le résultat</h5>
+        </div>
+        <div class="card-body">
+            <!-- Messages d'alerte -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Informations du résultat -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="m-0">Informations du Résultat</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="student" class="form-label">Étudiant <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="student" name="student" required>
+                                            <option value="">Sélectionner un étudiant</option>
+                                            {% for student in students %}
+                                                <option value="{{ student.id }}" {% if result.student.id == student.id %}selected{% endif %}>{{ student.get_full_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="module" class="form-label">Module <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="module" name="module" required>
+                                            <option value="">Sélectionner un module</option>
+                                            {% for module in modules %}
+                                                <option value="{{ module.id }}" {% if result.module.id == module.id %}selected{% endif %}>{{ module.code }} - {{ module.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="score" class="form-label">Note <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="score" name="score" 
+                                               value="{{ result.score }}" min="0" max="20" step="0.01" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="semester" class="form-label">Semestre <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="semester" name="semester" required>
+                                            <option value="">Sélectionner un semestre</option>
+                                            {% for value, label in semesters %}
+                                                <option value="{{ value }}" {% if result.semester == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="exam_date" class="form-label">Date d'examen <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="exam_date" name="exam_date" 
+                                               value="{{ result.exam_date|date:'Y-m-d' }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="comments" class="form-label">Commentaires</label>
+                                    <textarea class="form-control" id="comments" name="comments" rows="3">{{ result.comments }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'accounts:results_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Enregistrer les modifications
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Validation du formulaire
+document.querySelector('form').addEventListener('submit', function(e) {
+    const student = document.getElementById('student').value;
+    const module = document.getElementById('module').value;
+    const score = document.getElementById('score').value;
+    const semester = document.getElementById('semester').value;
+    const examDate = document.getElementById('exam_date').value;
+    
+    if (!student) {
+        e.preventDefault();
+        alert('Veuillez sélectionner un étudiant.');
+        return false;
+    }
+    
+    if (!module) {
+        e.preventDefault();
+        alert('Veuillez sélectionner un module.');
+        return false;
+    }
+    
+    if (!score || score < 0 || score > 20) {
+        e.preventDefault();
+        alert('Veuillez entrer une note valide entre 0 et 20.');
+        return false;
+    }
+    
+    if (!semester) {
+        e.preventDefault();
+        alert('Veuillez sélectionner un semestre.');
+        return false;
+    }
+    
+    if (!examDate) {
+        e.preventDefault();
+        alert('Veuillez sélectionner une date d\'examen.');
+        return false;
+    }
+});
+</script>
+{% endblock %}
