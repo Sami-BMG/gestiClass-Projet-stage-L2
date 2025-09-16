@@ -47,7 +47,7 @@ class User(AbstractUser):
         #les dashboards
         ("peut_acceder_au_dashboard", "Peut accéder au tableau de bord "),
         
-        ("peut_voir_infos_utile_student", "Peut voir les infos utiles  pour des étudiants"),
+        ("dashboard", "Peut voir les infos utiles  pour des étudiants"),
         ("peut_voir_infos_utile_teacher", "Peut voir les infos utiles pour des enseignants"),
         
         

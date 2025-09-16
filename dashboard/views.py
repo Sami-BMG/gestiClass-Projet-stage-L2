@@ -74,59 +74,6 @@ def dashboard(request):
     }
     return render(request, 'dashboard/dashboard.html', context)
 
-@login_required
-def teacher_dashboard(request):
-    """Tableau de bord pour les enseignants"""
-    if not request.user.is_teacher():
-        django_messages.error(request, "Accès réservé aux enseignants.")
-        return redirect('accounts:login')
-    
-    teacher_info = InfoMessage.objects.filter(audience='teacher').first()
-    
-    context = {
-        'title': 'Tableau de bord Enseignant',
-        'user': request.user,
-        'teacher_info': teacher_info,
-        'student_count': User.objects.filter(profil='student').count(),
-        'teacher_count': User.objects.filter(profil='teacher').count(),
-        'module_count': Module.objects.count(),  
-        'stats': {'total_students': Student.objects.count(),},
-        'show_module_chart': True,  
-    }
-    
-    return render(request, 'dashboard/teacher_dashboard.html', context)
-
-@login_required
-def student_dashboard(request):
-    """Tableau de bord pour les élèves"""
-    if not request.user.is_student():
-        django_messages.error(request, "Accès réservé aux étudiants.")
-        return redirect('accounts:login')
-    
-    student_user = request.user
-    today = datetime.now()
-    week_start = today - timedelta(days=today.weekday())
-    week_str = week_start.strftime("%Y-%m-%d")
-    
-    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-    schedule_dict = {day: {'8h-10h': None, '10h-12h': None, '14h-16h': None, '16h-18h': None} for day in days}
-    
-    student_info = InfoMessage.objects.filter(audience='student').first()
-    
-    context = {
-        'title': 'Tableau de bord Élève',
-        'user': request.user,
-        'student_user': student_user,  
-        'student_info': student_info,
-        'schedule': schedule_dict,
-        'days': days,
-        'student_count': User.objects.filter(profil='student').count(),
-        'teacher_count': User.objects.filter(profil='teacher').count(),
-        'module_count': Module.objects.count(),
-        'show_module_chart': True,  
-    }
-    
-    return render(request, 'dashboard/student_dashboard.html', context)
 
 @csrf_exempt
 @require_POST
@@ -184,59 +131,94 @@ def delete_info_message(request):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
-# ============ VUES DE Graphe ============
+# ============ VUES DE GRAPHIQUES ============
+
+@require_GET
+def admin_activity_data(request):
+    """Données d'activité pour l'admin"""
+    # Données simulées - à remplacer par vos données réelles
+    data = {
+        'labels': ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+        'data': [120, 150, 180, 90, 200, 160, 140]
+    }
+    return JsonResponse(data)
+
+@require_GET  
+def message_type_data(request):
+    """Types de messages pour l'admin"""
+    data = {
+        'labels': ['Suggestions', 'Problèmes', 'Questions', 'Autres'],
+        'data': [45, 30, 60, 15]
+    }
+    return JsonResponse(data)
 
 @require_GET
 def module_chart_data(request):
-    """
-    Vue qui retourne les données pour le graphique des notes par module
-    """
+    """Moyennes par module pour enseignant"""
     try:
-        # Récupérer toutes les notes avec les informations des modules et étudiants
-        notes = Note.objects.select_related('module', 'student').all().order_by('module__name', 'student__username')
+        notes = Note.objects.select_related('module').all()
         
-        # Grouper les notes par module
-        notes_by_module = {}
+        modules_avg = {}
+        modules_count = {}
+        
         for note in notes:
             module_name = note.module.name
-            if module_name not in notes_by_module:
-                notes_by_module[module_name] = []
-            notes_by_module[module_name].append({
-                'student': f"{note.student.first_name} {note.student.last_name}",
-                'note': float(note.value),
-                'date': note.date.strftime('%Y-%m-%d')
-            })
+            if module_name not in modules_avg:
+                modules_avg[module_name] = 0
+                modules_count[module_name] = 0
+            
+            modules_avg[module_name] += float(note.value)
+            modules_count[module_name] += 1
         
-        # Préparer les données pour le graphique
-        labels = list(notes_by_module.keys())
+        labels = []
+        averages = []
         
-        # Pour chaque module, extraire la liste des notes
-        datasets = []
-        for module_name, notes_list in notes_by_module.items():
-            notes_values = [note['note'] for note in notes_list]
-            datasets.append({
-                'label': module_name,
-                'data': notes_values,
-                'backgroundColor': f'rgba({random.randint(0, 255)}, {random.randint(0, 255)}, {random.randint(0, 255)}, 0.2)',
-                'borderColor': f'rgba({random.randint(0, 255)}, {random.randint(0, 255)}, {random.randint(0, 255)}, 1)',
-                'borderWidth': 1
-            })
+        for module_name, total in modules_avg.items():
+            count = modules_count[module_name]
+            average = total / count if count > 0 else 0
+            labels.append(module_name)
+            averages.append(round(average, 2))
         
         data = {
-            'labels': ['Étudiants'],  # Label général pour l'axe X
-            'datasets': datasets,
-            'notes_detail': notes_by_module  # Détails supplémentaires si besoin
+            'labels': labels,
+            'datasets': [{
+                'label': 'Moyenne des notes',
+                'data': averages
+            }]
         }
         
         return JsonResponse(data)
     
     except Exception as e:
-        return JsonResponse({
-            'error': f'Erreur lors de la récupération des notes: {str(e)}',
-            'labels': [],
-            'datasets': []
-        }, status=500)
+        return JsonResponse({'error': str(e)}, status=500)
 
+@require_GET
+def grade_distribution_data(request):
+    """Répartition des notes pour enseignant"""
+    # Données simulées - à adapter
+    return JsonResponse([15, 25, 30, 20, 10])
+
+@require_GET
+def student_grades_data(request):
+    """Notes de l'étudiant connecté"""
+    if request.user.is_student():
+        notes = Note.objects.filter(student=request.user)
+        data = {
+            'labels': [note.module.name for note in notes],
+            'data': [float(note.value) for note in notes]
+        }
+        return JsonResponse(data)
+    return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+
+@require_GET
+def student_progress_data(request):
+    """Progression de l'étudiant"""
+    # Données simulées
+    data = {
+        'labels': ['S1', 'S2', 'S3', 'S4'],
+        'data': [12.5, 13.2, 14.0, 15.2]
+    }
+    return JsonResponse(data)
 
 # ============ VUES DE MODIFICATIONS ============
 @login_required
@@ -260,10 +242,10 @@ def update_student_info(request):
         else:
             django_messages.error(request, "Veuillez remplir tous les champs.")
         
-        return redirect('dashboard:admin_dashboard')
+        return redirect('dashboard:dashboard')
     
     django_messages.error(request, "Méthode non autorisée.")
-    return redirect('dashboard:admin_dashboard')
+    return redirect('dashboard:dashboard')
 
 @login_required
 @user_passes_test(lambda u: u.profil == 'admin')
@@ -286,10 +268,10 @@ def update_teacher_info(request):
         else:
             django_messages.error(request, "Veuillez remplir tous les champs.")
         
-        return redirect('dashboard:admin_dashboard')
+        return redirect('dashboard:dashboard')
     
     django_messages.error(request, "Méthode non autorisée.")
-    return redirect('dashboard:admin_dashboard')
+    return redirect('dashboard:dashboard')
 
 
 @login_required

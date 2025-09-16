@@ -6,8 +6,8 @@
     <div class="card shadow mb-4">
         <div class="row justify-content-center">
             <div class="col-md-6 text-center">
-                <h1>     <h1>Bonjour {{ user.first_name }} !</h1>
-                <h3>Bienvenue sur votre espace ! . </h3>
+                <h1>Bonjour {{ user.first_name }} !</h1>
+                <h3>Bienvenue sur votre espace !</h3>
             </div>
         </div>
     </div>
@@ -32,13 +32,12 @@
                 </div>
             </div>
         </div>
-        <div class="card stat-card clickable-card" >
+        <div class="card stat-card clickable-card">
             <div class="stat-icon" style="background-color: #6AC5D7;">
                 <i class="fas fa-book"></i>
             </div>
             <div class="stat-info">
                 <p>{{ module_count }} Modules</p>
-
             </div>
         </div>
         <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:suggestions_list' %}'">
@@ -47,10 +46,9 @@
             </div>
             <div class="stat-info">
                 <p>{{ new_contacts_count }} Suggestions</p>
-
             </div>
         </div>
-        <div class="card stat-card clickable-card"onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
+        <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="stat-icon" style="background-color: #4CAF50;">
@@ -74,22 +72,22 @@
             </div>
             <div class="chart-content">
                 <!-- Graphique des moyennes par module -->
-                <canvas id="moduleChart" height="300"></canvas>
+                <canvas id="moduleChart" height="500"></canvas>
             </div>
         </div>
         <div class="summary-container">
             <div class="summary-content">
-                {% if perms.dashboard.peut_voir_infos_utile_student%}
-                <!-- Informations pour les étudiants -->
+                {% if perms.accounts.peut_voir_infos_utile_student %}
                 <div class="info-section">
                     <div class="info-card-header">
                         <h3>Informations pour les étudiants</h3>
+                        {% if perms.accounts.peut_agir_infos_utile_student %}
                         <div>
-                            <i class="fas fa-user-graduate info-icon"></i>
                             <button class="btn-edit" onclick="toggleEdit('student')">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </div>
+                        {% endif %}
                     </div>
                     <div class="info-card-body">
                         <div class="form-group">
@@ -101,28 +99,26 @@
                             <label for="student_info_content">Contenu:</label>
                             <textarea class="form-control" id="student_info_content" rows="6" readonly>{% if student_info %}{{ student_info.content }}{% else %}Les examens de fin de semestre auront lieu du 15 au 20 juin. Veuillez consulter le calendrier pour plus de détails sur les horaires et les salles.{% endif %}</textarea>
                         </div>
-                        {% if perms.dashboard.peut_agir_infos_utile_student%}
                         <div class="action-buttons d-none" id="student_actions">
                             <button type="button" class="btn btn-save" onclick="saveInfo('student')">Enregistrer</button>
                             <button type="button" class="btn btn-cancel" onclick="cancelEdit('student')">Annuler</button>
                             <button type="button" class="btn btn-delete" onclick="deleteInfo('student')">Supprimer</button>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
                 
-                {% if perms.dashboard.peut_voir_infos_utile_teacher %}
-                <!-- Informations pour les enseignants -->
+                {% if perms.accounts.peut_voir_infos_utile_teacher %}
                 <div class="info-section">
                     <div class="info-card-header">
                         <h3>Informations pour les enseignants</h3>
+                        {% if perms.accounts.peut_agir_infos_utile_teacher %}
                         <div>
-                            <i class="fas fa-chalkboard-teacher info-icon"></i>
                             <button class="btn-edit" onclick="toggleEdit('teacher')">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </div>
+                        {% endif %}
                     </div>
                     <div class="info-card-body">
                         <div class="form-group">
@@ -134,13 +130,11 @@
                             <label for="teacher_info_content">Contenu:</label>
                             <textarea class="form-control" id="teacher_info_content" rows="6" readonly>{% if teacher_info %}{{ teacher_info.content }}{% else %}Une réunion pédagogique est prévue le vendredi 10 juin à 16h00 en salle des professeurs. Ordre du jour: préparation des examens de fin de semestre.{% endif %}</textarea>
                         </div>
-                        {% if perms.dashboard.peut_agir_infos_utile_teacher %}
                         <div class="action-buttons d-none" id="teacher_actions">
                             <button type="button" class="btn btn-save" onclick="saveInfo('teacher')">Enregistrer</button>
                             <button type="button" class="btn btn-cancel" onclick="cancelEdit('teacher')">Annuler</button>
                             <button type="button" class="btn btn-delete" onclick="deleteInfo('teacher')">Supprimer</button>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
@@ -459,12 +453,29 @@
     }
 </style>
 
-<!-- Ajouter le script Chart.js dans le head de base.html ou ici -->
+<!-- Ajouter le script Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
     // Stocker les valeurs originales pour l'annulation
     let originalValues = {};
+    
+    // Fonction pour récupérer le token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
     function toggleEdit(type) {
         const titleInput = document.getElementById(`${type}_info_title`);
         const contentTextarea = document.getElementById(`${type}_info_content`);
@@ -488,8 +499,6 @@
             actionButtons.classList.add('d-none');
         }
     }
-
-
         
     function cancelEdit(type) {
         const titleInput = document.getElementById(`${type}_info_title`);
@@ -510,24 +519,6 @@
         // Effacer les valeurs originales
         delete originalValues[type];
     }
-
-        
-    // Fonction pour récupérer le token CSRF
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    
     
     function saveInfo(type) {
         const titleInput = document.getElementById(`${type}_info_title`);
@@ -624,8 +615,8 @@
                     data: {
                         labels: data.labels,
                         datasets: [{
-                            label: data.providers[0],
-                            data: data.datasets[0],
+                            label: 'Moyenne des notes',
+                            data: data.datasets[0].data,
                             backgroundColor: 'rgba(54, 162, 235, 0.5)',
                             borderColor: 'rgba(54, 162, 235, 1)',
                             borderWidth: 1
@@ -660,41 +651,6 @@
                 });
             })
             .catch(error => console.error('Error loading chart data:', error));
-
-        // Simulation du chargement des étudiants lorsqu'une classe est sélectionnée
-        const classSelect = document.getElementById('class_select');
-        if (classSelect) {
-            classSelect.addEventListener('change', function() {
-                const classId = this.value;
-                
-                // Ajouter des options fictives selon la classe sélectionnée
-                let options = '<option value="">-- Sélectionner un étudiant --</option>';
-                
-                if (classId === '1') {
-                    options += '<option value="1">Jean Dupont</option>';
-                    options += '<option value="2">Marie Lambert</option>';
-                    options += '<option value="3">Thomas Martin</option>';
-                } else if (classId === '2') {
-                    options += '<option value="4">Sophie Dubois</option>';
-                    options += '<option value="5">Pierre Leroy</option>';
-                    options += '<option value="6">Julie Moreau</option>';
-                } else if (classId === '3') {
-                    options += '<option value="7">Lucie Bernard</option>';
-                    options += '<option value="8">Hugo Petit</option>';
-                    options += '<option value="9">Emma Garcia</option>';
-                } else if (classId === '4') {
-                    options += '<option value="10">Léo Durand</option>';
-                    options += '<option value="11">Chloé Roux</option>';
-                    options += '<option value="12">Mathieu Vincent</option>';
-                }
-                
-                // Mettre à jour le sélecteur d'étudiants (si présent dans votre HTML)
-                const studentSelect = document.getElementById('student_select');
-                if (studentSelect) {
-                    studentSelect.innerHTML = options;
-                }
-            });
-        }
     });
 </script>
 {% endblock %}
