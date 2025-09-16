@@ -19,8 +19,6 @@ class User(AbstractUser):
     specialty = models.CharField(max_length=100, null=True, blank=True)
     hire_date = models.DateField(null=True, blank=True)
     address = models.TextField(blank=True)
-    is_student = models.BooleanField(default=False)
-    is_teacher = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=15, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     
@@ -47,11 +45,14 @@ class User(AbstractUser):
         ("peut_acceder_aux_roles", "peut acceder aux roles"),  
         
         #les dashboards
-        ("peut_acceder_au_student_dashboard", "Peut accéder au tableau de bord étudiant"),
-        ("peut_acceder_au_teacher_dashboard", "Peut accéder au tableau de bord enseignant"),
-        ("peut_acceder_au_admin_dashboard", "Peut accéder au tableau de bord administrateur"),
+        ("peut_acceder_au_dashboard", "Peut accéder au tableau de bord "),
+        
+        ("peut_voir_infos_utile_student", "Peut voir les infos utiles  pour des étudiants"),
+        ("peut_voir_infos_utile_teacher", "Peut voir les infos utiles pour des enseignants"),
         
         
+        ("peut_agir_infos_utile_student", "Peut agir sur les infos utiles pour des étudiants"),
+        ("peut_agir_infos_utile_teacher", "Peut agir sur les infos utiles pour des enseignants"),
         
         #les listes
         ("can_view_student_list", "Peut voir la liste des étudiants"),

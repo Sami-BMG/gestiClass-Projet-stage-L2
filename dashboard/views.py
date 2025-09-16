@@ -17,7 +17,8 @@ from django.views.generic import TemplateView
 from chartjs.views.lines import BaseLineChartView
 from django.db.models import Avg
 from django.db import transaction 
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
+
 from django.utils import timezone
 from datetime import timedelta
 from accounts.models import Timetable 
@@ -36,12 +37,8 @@ def home(request):
     if not request.user.is_authenticated:
         return redirect('login')
         # Rediriger en fonction du rôle de l'utilisateur
-    if request.user.has_perm('accounts.peut_acceder_au_admin_dashboard'):
-        return redirect('dashboard:admin_dashboard')
-    elif request.user.has_perm('accounts.peut_acceder_au_teacher_dashboard'):
-        return redirect('dashboard:teacher_dashboard')
-    elif request.user.has_perm('accounts.peut_acceder_au_student_dashboard'):
-        return redirect('dashboard:student_dashboard')
+    if request.user.has_perm('accounts.peut_acceder_au_dashboard'):
+        return redirect('dashboard:dashboard')
     return redirect('accounts:login')
     
     
@@ -50,18 +47,18 @@ def is_admin(user):
     return user.is_authenticated and hasattr(user, 'profil') and user.profil == 'admin'
 
 # ============ VUES DES TABLEAUX DE BOARD ============
+
+
 @login_required
-def admin_dashboard(request):
+def dashboard(request):
     """Tableau de bord pour les administrateurs"""
-    if not hasattr(request.user, 'profil') or request.user.profil != 'admin':
-        django_messages.error(request, "Accès réservé aux administrateurs.")
-        return redirect('accounts:login')
-    
-    
+    #if not request.user.is_administrator():
+        #django_messages.error(request, "Accès réservé aux administrateurs.")
+        #return redirect('accounts:login')
     
     # Récupérer les données pour le dashboard
     context = {
-        'title': 'Tableau de bord Administrateur',
+        'title': 'Tableau de bord',
         'user': request.user,
         'student_count': User.objects.filter(profil='student').count(),
         'teacher_count': User.objects.filter(profil='teacher').count(),
@@ -73,9 +70,9 @@ def admin_dashboard(request):
         'week_days': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
         'student_info': InfoMessage.objects.filter(audience='student').first(),
         'teacher_info': InfoMessage.objects.filter(audience='teacher').first(),
-        'show_module_chart': True,  # ← Nouveau: Activer le graphique
+        'show_module_chart': True,
     }
-    return render(request, 'dashboard/admin_dashboard.html', context)
+    return render(request, 'dashboard/dashboard.html', context)
 
 @login_required
 def teacher_dashboard(request):
@@ -111,7 +108,6 @@ def student_dashboard(request):
     week_start = today - timedelta(days=today.weekday())
     week_str = week_start.strftime("%Y-%m-%d")
     
-    
     days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
     schedule_dict = {day: {'8h-10h': None, '10h-12h': None, '14h-16h': None, '16h-18h': None} for day in days}
     
@@ -131,6 +127,61 @@ def student_dashboard(request):
     }
     
     return render(request, 'dashboard/student_dashboard.html', context)
+
+@csrf_exempt
+@require_POST
+@login_required
+def save_info_message(request):
+    """Sauvegarder ou mettre à jour un message d'information"""
+    if not request.user.is_administrator():
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+    
+    try:
+        data = json.loads(request.body)
+        audience = data.get('audience')
+        title = data.get('title')
+        content = data.get('content')
+        
+        # Valider les données
+        if not all([audience, title, content]):
+            return JsonResponse({'success': False, 'error': 'Tous les champs sont requis'})
+        
+        # Chercher s'il existe déjà un message pour cet audience
+        info_message, created = InfoMessage.objects.get_or_create(
+            audience=audience,
+            defaults={'title': title, 'content': content, 'is_active': True}
+        )
+        
+        if not created:
+            info_message.title = title
+            info_message.content = content
+            info_message.is_active = True
+            info_message.save()
+        
+        return JsonResponse({'success': True, 'message': 'Informations enregistrées avec succès!'})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@csrf_exempt
+@require_POST
+@login_required
+def delete_info_message(request):
+    """Supprimer un message d'information"""
+    if not request.user.is_administrator():
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+    
+    try:
+        data = json.loads(request.body)
+        audience = data.get('audience')
+        
+        # Supprimer le message pour cet audience
+        InfoMessage.objects.filter(audience=audience).delete()
+        
+        return JsonResponse({'success': True, 'message': 'Informations supprimées avec succès!'})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 # ============ VUES DE Graphe ============
@@ -515,3 +566,6 @@ def get_available_resources(request):
         'modules': modules,
         'teachers': teachers
     })
+    
+
+    

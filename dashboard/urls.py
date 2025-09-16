@@ -6,9 +6,9 @@ app_name = 'dashboard'
 urlpatterns = [
     # Pages d'accueil par rôle (de la première version)
     path('', views.home, name='home'),
-    path('admin/', views.admin_dashboard, name='admin_dashboard'),
-    path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
-    path('student/', views.student_dashboard, name='student_dashboard'),
+    path('admin/', views.dashboard, name='dashboard'),
+    path('save-info/', views.save_info_message, name='save_info_message'),
+    path('delete-info/', views.delete_info_message, name='delete_info_message'),
     
     # Fonctionnalités du tableau de bord (de la deuxième version)
     path('update-student-info/', views.update_student_info, name='update_student_info'),

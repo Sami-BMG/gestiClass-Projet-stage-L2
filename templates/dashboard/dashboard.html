@@ -1,15 +1,17 @@
 {% extends 'models/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="content">
     <div class="card shadow mb-4">
         <div class="row justify-content-center">
             <div class="col-md-6 text-center">
-                <h1>     <h1>Bonjour M. {{ user.first_name }} !</h1>
-                <h3>Bienvenue sur votre espace personnel GestiClass </h3>
+                <h1>     <h1>Bonjour {{ user.first_name }} !</h1>
+                <h3>Bienvenue sur votre espace ! . </h3>
             </div>
         </div>
     </div>
+
     <!-- Dashboard Cards -->
     <div class="dashboard-cards">
         <div class="card stat-card">
@@ -31,11 +33,20 @@
             </div>
         </div>
         <div class="card stat-card clickable-card" >
+            <div class="stat-icon" style="background-color: #6AC5D7;">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-info">
+                <p>{{ module_count }} Modules</p>
+
+            </div>
+        </div>
+        <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:suggestions_list' %}'">
             <div class="stat-icon" style="background-color: #E91E63;">
                 <i class="fas fa-lightbulb"></i>
             </div>
             <div class="stat-info">
-                <p>{{ module_count }} Modules</p>
+                <p>{{ new_contacts_count }} Suggestions</p>
 
             </div>
         </div>
@@ -46,7 +57,8 @@
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <div class="stat-info ml-3">
-                        <p class="text-muted mb-0">Voir l'emploi du temps</p>
+                        <h5 class="mb-1">Emploi du temps</h5>
+                        <p class="text-muted mb-0">Gestion des plannings</p>
                     </div>
                 </div>
             </div>
@@ -57,41 +69,86 @@
     <div class="charts">
         <div class="chart-container">
             <div class="chart-header">
-                <h3>Statistiques des étudiants</h3>
+                <h3>Moyennes des notes par module</h3>
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             <div class="chart-content">
-                <!-- Placeholder for chart -->
-                <div style="height: 300px; background-color: #f5f7fb; display: flex; justify-content: center; align-items: center; border-radius: 5px;">
-                    <p>Graphique des statistiques des étudiants</p>
-                </div>
+                <!-- Graphique des moyennes par module -->
+                <canvas id="moduleChart" height="300"></canvas>
             </div>
         </div>
         <div class="summary-container">
-            <div class="summary-header">
-                <h3>Informations Importantes</h3>
-                <i class="fas fa-ellipsis-v"></i>
-            </div>
             <div class="summary-content">
+                {% if perms.dashboard.peut_voir_infos_utile_student%}
+                <!-- Informations pour les étudiants -->
+                <div class="info-section">
+                    <div class="info-card-header">
+                        <h3>Informations pour les étudiants</h3>
+                        <div>
+                            <i class="fas fa-user-graduate info-icon"></i>
+                            <button class="btn-edit" onclick="toggleEdit('student')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="info-card-body">
+                        <div class="form-group">
+                            <label for="student_info_title">Titre:</label>
+                            <input type="text" class="form-control" id="student_info_title" 
+                                value="{% if student_info %}{{ student_info.title }}{% else %}Examen de fin de semestre{% endif %}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="student_info_content">Contenu:</label>
+                            <textarea class="form-control" id="student_info_content" rows="6" readonly>{% if student_info %}{{ student_info.content }}{% else %}Les examens de fin de semestre auront lieu du 15 au 20 juin. Veuillez consulter le calendrier pour plus de détails sur les horaires et les salles.{% endif %}</textarea>
+                        </div>
+                        {% if perms.dashboard.peut_agir_infos_utile_student%}
+                        <div class="action-buttons d-none" id="student_actions">
+                            <button type="button" class="btn btn-save" onclick="saveInfo('student')">Enregistrer</button>
+                            <button type="button" class="btn btn-cancel" onclick="cancelEdit('student')">Annuler</button>
+                            <button type="button" class="btn btn-delete" onclick="deleteInfo('student')">Supprimer</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if perms.dashboard.peut_voir_infos_utile_teacher %}
                 <!-- Informations pour les enseignants -->
                 <div class="info-section">
                     <div class="info-card-header">
+                        <h3>Informations pour les enseignants</h3>
+                        <div>
+                            <i class="fas fa-chalkboard-teacher info-icon"></i>
+                            <button class="btn-edit" onclick="toggleEdit('teacher')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="info-card-body">
                         <div class="form-group">
                             <label for="teacher_info_title">Titre:</label>
-                            <input type="text" class="form-control" id="teacher_info_title" value="Réunion pédagogique" readonly>
+                            <input type="text" class="form-control" id="teacher_info_title" 
+                                value="{% if teacher_info %}{{ teacher_info.title }}{% else %}Réunion pédagogique{% endif %}" readonly>
                         </div>
                         <div class="form-group">
                             <label for="teacher_info_content">Contenu:</label>
-                            <textarea class="form-control" id="teacher_info_content" rows="6" readonly>Une réunion pédagogique est prévue le vendredi 10 juin à 16h00 en salle des professeurs. Ordre du jour: préparation des examens de fin de semestre.</textarea>
+                            <textarea class="form-control" id="teacher_info_content" rows="6" readonly>{% if teacher_info %}{{ teacher_info.content }}{% else %}Une réunion pédagogique est prévue le vendredi 10 juin à 16h00 en salle des professeurs. Ordre du jour: préparation des examens de fin de semestre.{% endif %}</textarea>
                         </div>
+                        {% if perms.dashboard.peut_agir_infos_utile_teacher %}
+                        <div class="action-buttons d-none" id="teacher_actions">
+                            <button type="button" class="btn btn-save" onclick="saveInfo('teacher')">Enregistrer</button>
+                            <button type="button" class="btn btn-cancel" onclick="cancelEdit('teacher')">Annuler</button>
+                            <button type="button" class="btn btn-delete" onclick="deleteInfo('teacher')">Supprimer</button>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
 <style>
     /* Styles généraux */
     .content {
@@ -402,10 +459,12 @@
     }
 </style>
 
+<!-- Ajouter le script Chart.js dans le head de base.html ou ici -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     // Stocker les valeurs originales pour l'annulation
     let originalValues = {};
-    
     function toggleEdit(type) {
         const titleInput = document.getElementById(`${type}_info_title`);
         const contentTextarea = document.getElementById(`${type}_info_content`);
@@ -429,37 +488,9 @@
             actionButtons.classList.add('d-none');
         }
     }
-    
-    function saveInfo(type) {
-        const titleInput = document.getElementById(`${type}_info_title`);
-        const contentTextarea = document.getElementById(`${type}_info_content`);
-        const actionButtons = document.getElementById(`${type}_actions`);
+
+
         
-        // Récupération des valeurs
-        const title = titleInput.value;
-        const content = contentTextarea.value;
-        
-        // Validation simple
-        if (!title.trim() || !content.trim()) {
-            alert('Le titre et le contenu ne peuvent pas être vides!');
-            return;
-        }
-        
-        // Ici, vous pouvez ajouter le code pour sauvegarder les données
-        console.log(`Enregistrement des informations ${type}:`, { title, content });
-        
-        // Afficher une alerte de succès
-        alert('Informations enregistrées avec succès!');
-        
-        // Repasser en mode lecture
-        titleInput.readOnly = true;
-        contentTextarea.readOnly = true;
-        actionButtons.classList.add('d-none');
-        
-        // Effacer les valeurs originales
-        delete originalValues[type];
-    }
-    
     function cancelEdit(type) {
         const titleInput = document.getElementById(`${type}_info_title`);
         const contentTextarea = document.getElementById(`${type}_info_content`);
@@ -479,34 +510,157 @@
         // Effacer les valeurs originales
         delete originalValues[type];
     }
+
+        
+    // Fonction pour récupérer le token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
     
+    
+    function saveInfo(type) {
+        const titleInput = document.getElementById(`${type}_info_title`);
+        const contentTextarea = document.getElementById(`${type}_info_content`);
+        const actionButtons = document.getElementById(`${type}_actions`);
+        
+        // Récupération des valeurs
+        const title = titleInput.value;
+        const content = contentTextarea.value;
+        
+        // Validation simple
+        if (!title.trim() || !content.trim()) {
+            alert('Le titre et le contenu ne peuvent pas être vides!');
+            return;
+        }
+        
+        // Envoyer les données au serveur
+        fetch("{% url 'dashboard:save_info_message' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                audience: type,
+                title: title,
+                content: content
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                // Repasser en mode lecture
+                titleInput.readOnly = true;
+                contentTextarea.readOnly = true;
+                actionButtons.classList.add('d-none');
+                // Effacer les valeurs originales
+                delete originalValues[type];
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue lors de la sauvegarde');
+        });
+    }
+
     function deleteInfo(type) {
         if (confirm('Êtes-vous sûr de vouloir supprimer ces informations? Cette action est irréversible.')) {
-            const titleInput = document.getElementById(`${type}_info_title`);
-            const contentTextarea = document.getElementById(`${type}_info_content`);
-            const actionButtons = document.getElementById(`${type}_actions`);
-            
-            // Ici, vous pouvez ajouter le code pour supprimer les données
-            console.log(`Suppression des informations ${type}`);
-            
-            // Réinitialiser les champs
-            titleInput.value = '';
-            contentTextarea.value = '';
-            
-            // Repasser en mode lecture
-            titleInput.readOnly = true;
-            contentTextarea.readOnly = true;
-            actionButtons.classList.add('d-none');
-            
-            // Afficher une alerte de succès
-            alert('Informations supprimées avec succès!');
-            
-            // Effacer les valeurs originales
-            delete originalValues[type];
+            fetch("{% url 'dashboard:delete_info_message' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    audience: type
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    // Réinitialiser les champs
+                    document.getElementById(`${type}_info_title`).value = '';
+                    document.getElementById(`${type}_info_content`).value = '';
+                    // Repasser en mode lecture
+                    document.getElementById(`${type}_info_title`).readOnly = true;
+                    document.getElementById(`${type}_info_content`).readOnly = true;
+                    document.getElementById(`${type}_actions`).classList.add('d-none');
+                } else {
+                    alert('Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue lors de la suppression');
+            });
         }
     }
     
+    // Script pour charger le graphique
     document.addEventListener('DOMContentLoaded', function() {
+        // Charger les données du graphique
+        fetch("{% url 'dashboard:module_chart_data' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('moduleChart').getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: data.providers[0],
+                            data: data.datasets[0],
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 20,
+                                title: {
+                                    display: true,
+                                    text: 'Moyenne (/20)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Modules'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Moyennes des notes par module'
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading chart data:', error));
+
         // Simulation du chargement des étudiants lorsqu'une classe est sélectionnée
         const classSelect = document.getElementById('class_select');
         if (classSelect) {

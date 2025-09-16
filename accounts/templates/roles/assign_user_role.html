@@ -10,7 +10,7 @@
                 Attribution de Rôle à {{ elem.username }}
             </h2>
             <ul class="breadcrumb">
-                <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
+                <li><a href="{% url 'dashboard:dashboard' %}">Accueil</a></li>
                 <li><a href="{% url 'accounts:'|add:user_type|add:'s_list' %}">
                     {% if user_type == 'student' %}Étudiants{% else %}Enseignants{% endif %}
                 </a></li>

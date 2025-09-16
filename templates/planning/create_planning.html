@@ -16,26 +16,15 @@
         </div>
         
         <div class="d-flex align-items-center gap-2">
-            <!-- Boutons d'action conditionnels -->
             {% if perms.accounts.can_change_timetable %}
             <button class="btn btn-primary shadow-sm" id="editTimetableBtn" data-bs-toggle="modal" data-bs-target="#timetableModal">
                 <i class="fas fa-edit fa-sm me-2"></i>Modifier
             </button>
-            {% endif %}
-            
-            <a href="
-                {% if user.profil == 'admin' %}
-                    {% url 'dashboard:admin_dashboard' %}
-                {% elif user.profil == 'teacher' %}
-                    {% url 'dashboard:teacher_dashboard' %}
-                {% elif user.profil == 'student' %}
-                    {% url 'dashboard:student_dashboard' %}
-                {% else %}
-                    {% url 'accounts:login' %}
-                {% endif %}
-                " class="btn btn-secondary">
+            {% else %}
+            <a href="{% url 'dashboard:dashboard' %}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Retour
             </a>
+            {% endif %}
         </div>
     </div>
 

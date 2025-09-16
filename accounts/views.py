@@ -97,12 +97,8 @@ def user_login(request):
                 login(request, user)
                 if hasattr(user, 'profil'):
                     print(user.profil, "login")
-                    if user.profil == 'admin':
-                        return redirect('dashboard:admin_dashboard')
-                    elif user.profil == 'teacher':
-                        return redirect('dashboard:teacher_dashboard')
-                    elif user.profil == 'student':
-                        return redirect('dashboard:student_dashboard')
+                    return redirect('dashboard:dashboard')
+
                 return redirect('dashboard:home')
             else:
                 messages.error(request, 'Identifiants invalides.')
