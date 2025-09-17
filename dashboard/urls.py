@@ -28,12 +28,7 @@ urlpatterns = [
     #path('timetable/clear/', views.clear_timetable, name='clear_timetable'),
     
     #urls du graphe
-    path('module-chart-data/', views.module_chart_data, name='module_chart_data'),
-    path('admin-activity-data/', views.admin_activity_data, name='admin_activity_data'),
-path('message-type-data/', views.message_type_data, name='message_type_data'),
-path('module-chart-data/', views.module_chart_data, name='module_chart_data'),
-path('grade-distribution-data/', views.grade_distribution_data, name='grade_distribution_data'),
-path('student-grades-data/', views.student_grades_data, name='student_grades_data'),
-path('student-progress-data/', views.student_progress_data, name='student_progress_data'),
-
+    path('chart/student-performance/', views.student_performance_data, name='student_performance_data'),
+    path('chart/teacher-module-performance/', views.teacher_module_performance_data, name='teacher_module_performance_data'),
+    path('chart/all-students-performance/', views.all_students_performance_data, name='all_students_performance_data'),
 ]

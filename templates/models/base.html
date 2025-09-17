@@ -697,67 +697,6 @@
                 });
             });
 
-            // Fonction pour charger le graphique des moyennes par module
-            function loadModuleChart() {
-                const chartContainer = document.getElementById('moduleChartContainer');
-                if (!chartContainer) return;
-                
-                fetch("{% url 'dashboard:module_chart_data' %}")
-                    .then(response => response.json())
-                    .then(data => {
-                        const ctx = document.getElementById('moduleChart').getContext('2d');
-                        
-                        new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: data.labels,
-                                datasets: [{
-                                    label: data.providers[0],
-                                    data: data.datasets[0],
-                                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                                    borderColor: 'rgba(54, 162, 235, 1)',
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        max: 20,
-                                        title: { 
-                                            display: true, 
-                                            text: 'Moyenne (/20)' 
-                                        }
-                                    },
-                                    x: {
-                                        title: { 
-                                            display: true, 
-                                            text: 'Modules' 
-                                        },
-                                        ticks: {
-                                            maxRotation: 45,
-                                            minRotation: 45
-                                        }
-                                    }
-                                },
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: 'Moyennes des notes par module'
-                                    }
-                                }
-                            }
-                        });
-                    })
-                    .catch(error => console.error('Error loading chart data:', error));
-            }
-
-            // Charger le graphique quand la page est prête
-            document.addEventListener('DOMContentLoaded', function() {
-                loadModuleChart();
-            });
-
             // Fonction pour basculer la sidebar
             function toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');

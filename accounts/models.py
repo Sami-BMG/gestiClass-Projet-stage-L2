@@ -46,19 +46,21 @@ class User(AbstractUser):
         
         #les dashboards
         ("peut_acceder_au_dashboard", "Peut accéder au tableau de bord "),
-        
         ("dashboard", "Peut voir les infos utiles  pour des étudiants"),
         ("peut_voir_infos_utile_teacher", "Peut voir les infos utiles pour des enseignants"),
-        
-        
         ("peut_agir_infos_utile_student", "Peut agir sur les infos utiles pour des étudiants"),
         ("peut_agir_infos_utile_teacher", "Peut agir sur les infos utiles pour des enseignants"),
+        ("can_view_student_performance_data", "Peut voir ses données de performance  étudiants"),
+        ("can_view_teacher_module_performance_data", "Peut voir les données de performance des modules des enseignants"),
+        ("can_view_all_students_performance_data ", "Peut voir les données de performance de tous les étudiants"),
         
         #les listes
         ("can_view_student_list", "Peut voir la liste des étudiants"),
         ("can_view_teacher_list", "Peut voir la liste des enseignants"),
         ("can_view_module_list", "Peut voir la liste des modules"),
         ("can_view_results_list", "Peut voir la liste résultats"),
+        ("can_view_suggestions_list", "Peut voir la liste des suggestions"),
+
         
         #les détails
         ("can_view_module_details", "Peut les details d'un module"),

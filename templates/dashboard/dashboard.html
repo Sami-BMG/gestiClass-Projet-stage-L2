@@ -40,6 +40,7 @@
                 <p>{{ module_count }} Modules</p>
             </div>
         </div>
+        {% if perms.accounts.can_view_suggestions_list %}
         <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:suggestions_list' %}'">
             <div class="stat-icon" style="background-color: #E91E63;">
                 <i class="fas fa-lightbulb"></i>
@@ -48,6 +49,7 @@
                 <p>{{ new_contacts_count }} Suggestions</p>
             </div>
         </div>
+        {% endif %}
         <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:timetable_view' %}'">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -67,12 +69,18 @@
     <div class="charts">
         <div class="chart-container">
             <div class="chart-header">
-                <h3>Moyennes des notes par module</h3>
+                {% if user.is_student %}
+                <h3>Mes résultats par module</h3>
+                {% elif user.is_teacher %}
+                <h3>Performances des élèves dans mes modules</h3>
+                {% else %}
+                <h3>Performances des élèves par module</h3>
+                {% endif %}
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             <div class="chart-content">
-                <!-- Graphique des moyennes par module -->
-                <canvas id="moduleChart" height="500"></canvas>
+                <!-- Graphique adapté à l'utilisateur -->
+                <canvas id="performanceChart" height="500"></canvas>
             </div>
         </div>
         <div class="summary-container">
@@ -602,25 +610,29 @@
         }
     }
     
-    // Script pour charger le graphique
     document.addEventListener('DOMContentLoaded', function() {
+        let chartUrl;
+        
+        // Déterminer l'URL en fonction du type d'utilisateur
+        {% if user.is_student %}
+        chartUrl = "{% url 'dashboard:student_performance_data' %}";
+        {% elif user.is_teacher %}
+        chartUrl = "{% url 'dashboard:teacher_module_performance_data' %}";
+        {% else %}
+        chartUrl = "{% url 'dashboard:all_students_performance_data' %}";
+        {% endif %}
+        
         // Charger les données du graphique
-        fetch("{% url 'dashboard:module_chart_data' %}")
+        fetch(chartUrl)
             .then(response => response.json())
             .then(data => {
-                const ctx = document.getElementById('moduleChart').getContext('2d');
+                const ctx = document.getElementById('performanceChart').getContext('2d');
                 
                 new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: data.labels,
-                        datasets: [{
-                            label: 'Moyenne des notes',
-                            data: data.datasets[0].data,
-                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        }]
+                        datasets: data.datasets
                     },
                     options: {
                         responsive: true,
@@ -644,7 +656,13 @@
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Moyennes des notes par module'
+                                {% if user.is_student %}
+                                text: 'Mes résultats par module'
+                                {% elif user.is_teacher %}
+                                text: 'Performances des élèves dans mes modules'
+                                {% else %}
+                                text: 'Performances des élèves par module'
+                                {% endif %}
                             }
                         }
                     }
@@ -654,3 +672,4 @@
     });
 </script>
 {% endblock %}
+ 

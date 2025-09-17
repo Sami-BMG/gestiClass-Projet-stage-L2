@@ -133,91 +133,105 @@ def delete_info_message(request):
 
 # ============ VUES DE GRAPHIQUES ============
 
-@require_GET
-def admin_activity_data(request):
-    """Données d'activité pour l'admin"""
-    # Données simulées - à remplacer par vos données réelles
-    data = {
-        'labels': ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-        'data': [120, 150, 180, 90, 200, 160, 140]
-    }
-    return JsonResponse(data)
-
-@require_GET  
-def message_type_data(request):
-    """Types de messages pour l'admin"""
-    data = {
-        'labels': ['Suggestions', 'Problèmes', 'Questions', 'Autres'],
-        'data': [45, 30, 60, 15]
-    }
-    return JsonResponse(data)
-
-@require_GET
-def module_chart_data(request):
-    """Moyennes par module pour enseignant"""
-    try:
-        notes = Note.objects.select_related('module').all()
-        
-        modules_avg = {}
-        modules_count = {}
-        
-        for note in notes:
-            module_name = note.module.name
-            if module_name not in modules_avg:
-                modules_avg[module_name] = 0
-                modules_count[module_name] = 0
-            
-            modules_avg[module_name] += float(note.value)
-            modules_count[module_name] += 1
-        
-        labels = []
-        averages = []
-        
-        for module_name, total in modules_avg.items():
-            count = modules_count[module_name]
-            average = total / count if count > 0 else 0
-            labels.append(module_name)
-            averages.append(round(average, 2))
-        
-        data = {
-            'labels': labels,
-            'datasets': [{
-                'label': 'Moyenne des notes',
-                'data': averages
-            }]
-        }
-        
-        return JsonResponse(data)
+@login_required
+@permission_required('accounts.can_view_student_performance_data', raise_exception=True)
+def student_performance_data(request):
+    """Données pour le graphique personnel de l'élève (ses résultats par module)"""
+    print(f"DEBUG: student_performance_data appelée par {request.user}")
     
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-@require_GET
-def grade_distribution_data(request):
-    """Répartition des notes pour enseignant"""
-    # Données simulées - à adapter
-    return JsonResponse([15, 25, 30, 20, 10])
-
-@require_GET
-def student_grades_data(request):
-    """Notes de l'étudiant connecté"""
-    if request.user.is_student():
-        notes = Note.objects.filter(student=request.user)
-        data = {
-            'labels': [note.module.name for note in notes],
-            'data': [float(note.value) for note in notes]
-        }
-        return JsonResponse(data)
-    return JsonResponse({'error': 'Accès non autorisé'}, status=403)
-
-@require_GET
-def student_progress_data(request):
-    """Progression de l'étudiant"""
-    # Données simulées
+    if not request.user.is_authenticated or not request.user.is_student():
+        print("DEBUG: Accès non autorisé - utilisateur non étudiant")
+        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+    
+    results = Result.objects.filter(student=request.user).select_related('module')
+    print(f"DEBUG: {results.count()} résultats trouvés pour {request.user}")
+    
     data = {
-        'labels': ['S1', 'S2', 'S3', 'S4'],
-        'data': [12.5, 13.2, 14.0, 15.2]
+        'labels': [result.module.name for result in results],
+        'datasets': [{
+            'label': f'Résultats de {request.user.first_name}',
+            'data': [float(result.score) for result in results],
+            'backgroundColor': 'rgba(54, 162, 235, 0.5)',
+            'borderColor': 'rgba(54, 162, 235, 1)',
+            'borderWidth': 1
+        }]
     }
+    
+    print(f"DEBUG: Données retournées: {data}")
+    return JsonResponse(data)
+
+
+
+@login_required
+@permission_required('accounts.can_view_teacher_module_performance_data', raise_exception=True)
+def teacher_module_performance_data(request):
+    """Données pour le graphique de l'enseignant (performances des élèves dans son module)"""
+    print(f"DEBUG: teacher_module_performance_data appelée par {request.user}")
+    
+    if not request.user.is_authenticated or not request.user.is_teacher():
+        print("DEBUG: Accès non autorisé - utilisateur non enseignant")
+        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+    
+    # Récupérer les modules enseignés par ce professeur
+    teacher_modules = Module.objects.filter(teacher=request.user)
+    print(f"DEBUG: {teacher_modules.count()} modules trouvés pour l'enseignant {request.user}")
+    
+    data = {
+        'labels': [],
+        'datasets': [{
+            'label': 'Moyenne des élèves',
+            'data': [],
+            'backgroundColor': 'rgba(75, 192, 192, 0.5)',
+            'borderColor': 'rgba(75, 192, 192, 1)',
+            'borderWidth': 1
+        }]
+    }
+    
+    for module in teacher_modules:
+        # Calculer la moyenne des résultats pour ce module
+        avg_score = Result.objects.filter(module=module).aggregate(Avg('score'))['score__avg'] or 0
+        print(f"DEBUG: Module {module.name} - moyenne: {avg_score}")
+        
+        data['labels'].append(module.name)
+        data['datasets'][0]['data'].append(float(avg_score))
+    
+    print(f"DEBUG: Données retournées pour l'enseignant: {data}")
+    return JsonResponse(data)
+
+
+@login_required
+@permission_required('accounts.can_view_all_students_performance_data', raise_exception=True)
+def all_students_performance_data(request):
+    """Données pour le graphique global (performances de tous les élèves par module)"""
+    print(f"DEBUG: all_students_performance_data appelée par {request.user}")
+    
+    if not request.user.is_authenticated or not (request.user.is_administrator() or request.user.is_teacher()):
+        print("DEBUG: Accès non autorisé - utilisateur non administrateur/enseignant")
+        return JsonResponse({'error': 'Accès non autorisé'}, status=403)
+    
+    # Récupérer tous les modules avec la moyenne des résultats
+    modules = Module.objects.all()
+    print(f"DEBUG: {modules.count()} modules trouvés au total")
+    
+    data = {
+        'labels': [],
+        'datasets': [{
+            'label': 'Moyenne des résultats par module',
+            'data': [],
+            'backgroundColor': 'rgba(75, 192, 192, 0.5)',
+            'borderColor': 'rgba(75, 192, 192, 1)',
+            'borderWidth': 1
+        }]
+    }
+    
+    for module in modules:
+        avg_score = Result.objects.filter(module=module).aggregate(Avg('score'))['score__avg'] or 0
+        print(f"DEBUG: Module {module.name} - moyenne globale: {avg_score}")
+        
+        data['labels'].append(module.name)
+        data['datasets'][0]['data'].append(float(avg_score))
+    
+    print(f"DEBUG: Données globales retournées: {data}")
     return JsonResponse(data)
 
 # ============ VUES DE MODIFICATIONS ============
@@ -366,8 +380,7 @@ def timetable_view(request):
         try:
             year, week_num = map(int, week_param.split('-'))
             jan1 = datetime(year, 1, 1)
-            # Trouver le premier lundi de l'année
-            while jan1.weekday() != 0:  # 0 = lundi
+            while jan1.weekday() != 0:  
                 jan1 += timedelta(days=1)
             current_week = jan1 + timedelta(weeks=week_num - 1)
         except (ValueError, IndexError):
@@ -379,11 +392,11 @@ def timetable_view(request):
     timetable_entries = Timetable.objects.filter(week_start=current_week)
     
     # Structurer les données pour le template
-    morning_slots = ['8-10', '10-12']  # Créneaux du matin
-    afternoon_slots = ['14-16', '16-18']  # Créneaux de l'après-midi
+    morning_slots = ['8-10', '10-12']  
+    afternoon_slots = ['14-16', '16-18']  
     
     time_slots = morning_slots + afternoon_slots  
-    days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+    days = ['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI']
     
     # Créer une structure de données organisée par jour et créneau
     organized_entries = {}
@@ -407,9 +420,9 @@ def timetable_view(request):
         'modules': Module.objects.all(),
         'teachers': User.objects.filter(profil='teacher'),
         'days': days,
-        'time_slots': time_slots,  # Tous les créneaux
-        'morning_slots': morning_slots,  # Créneaux du matin seulement
-        'afternoon_slots': afternoon_slots,  # Créneaux de l'après-midi seulement
+        'time_slots': time_slots,
+        'morning_slots': morning_slots,  
+        'afternoon_slots': afternoon_slots,
         'current_week': current_week,
         'can_edit': can_edit,
         'can_publish': can_publish,
@@ -531,8 +544,6 @@ def save_timetable_data(request):
     except Exception as e:
         print(f"Erreur: {str(e)}")  # DEBUG
         return JsonResponse({'success': False, 'error': str(e)})
-    
-    
     
 @require_http_methods(["GET"])
 @login_required
