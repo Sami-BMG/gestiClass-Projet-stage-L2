@@ -61,7 +61,9 @@ class User(AbstractUser):
         ("can_view_results_list", "Peut voir la liste résultats"),
         ("can_view_suggestions_list", "Peut voir la liste des suggestions"),
 
-        
+
+        ("can_delete_suggestion", "Peut supprimer une suggestion"),
+        ("can_delete_result", "Peut supprimer un résultat"),
         #les détails
         ("can_view_module_details", "Peut les details d'un module"),
         ("can_view_student_details", "Peut voir les détails d'un étudiant"),

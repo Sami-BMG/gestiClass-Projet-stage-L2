@@ -192,7 +192,7 @@
                                     <a href="{% url 'accounts:student_results' result.student.id %}" class="btn btn-sm btn-outline-primary" title="Voir bulletin">
                                         <i class="fas fa-file-alt"></i>
                                     </a>
-                                    {% if is_admin or user.is_staff %}
+                                    {% if perms.accounts.can_delete_result %}
                                     <a href="{% url 'accounts:update_result' result.id %}" class="btn btn-sm btn-outline-warning" title="Modifier">
                                         <i class="fas fa-edit"></i>
                                     </a>

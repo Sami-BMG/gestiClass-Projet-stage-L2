@@ -7,7 +7,6 @@
             <h2><i class="fas fa-lightbulb"></i>Suggestions</h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:home' %}">Accueil</a></li>
-                <li>Dashboard</li>
                 <li>Suggestions</li>
             </ul>
         </div>
@@ -49,7 +48,6 @@
                             <th>Date</th>
                             <th>Nom</th>
                             <th>Email</th>
-                            <th>Suggestion</th>
                             <th>Statut</th>
                             <th>Actions</th>
                         </tr>
@@ -62,12 +60,6 @@
                             <td>{{ suggestion.name }}</td>
                             <td>{{ suggestion.email }}</td>
                             <td>
-                                <button type="button" class="btn btn-link p-0 text-start" data-bs-toggle="modal" 
-                                        data-bs-target="#suggestionModal" data-id="{{ suggestion.id }}">
-                                    {{ suggestion.message|truncatewords:10 }}
-                                </button>
-                            </td>
-                            <td>
                                 {% if suggestion.is_read %}
                                     <span class="badge bg-success">Lue</span>
                                 {% else %}
@@ -75,19 +67,33 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <div class="btn-group">
+                                <div class="btn-group" role="group">
+                                    <!-- Bouton Marquer comme lu -->
                                     {% if not suggestion.is_read %}
                                     <a href="{% url 'dashboard:mark_suggestion_read' suggestion.id %}" 
-                                    class="btn btn-sm btn-outline-success" title="Marquer comme lue">
+                                       class="btn btn-sm btn-outline-success" 
+                                       title="Marquer comme lue">
                                         <i class="fas fa-check"></i>
                                     </a>
                                     {% endif %}
+                                    <!-- Bouton Voir -->
+                                    <a href="#"
+                                       class="btn btn-sm btn-outline-primary"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#suggestionModal"
+                                       data-id="{{ suggestion.id }}"
+                                       title="Voir la suggestion">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if perms.accounts.can_delete_suggestion %}
+                                    <!-- Bouton Supprimer -->
                                     <a href="{% url 'dashboard:delete_suggestion' suggestion.id %}" 
-                                    class="btn btn-sm btn-outline-danger" 
-                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')"
-                                    title="Supprimer">
+                                       class="btn btn-sm btn-outline-danger" 
+                                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')" 
+                                       title="Supprimer">
                                         <i class="fas fa-trash"></i>
                                     </a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -106,8 +112,9 @@
 
 <!-- Modal pour afficher le détail d'une suggestion -->
 <div class="modal fade" id="suggestionModal" tabindex="-1" aria-labelledby="suggestionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">  <!-- Ajout de modal-lg -->
         <div class="modal-content">
+            <!-- ... contenu existant ... -->
             <div class="modal-header">
                 <h5 class="modal-title" id="suggestionModalLabel">Détail de la suggestion</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

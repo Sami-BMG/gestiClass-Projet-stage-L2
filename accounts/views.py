@@ -3,10 +3,10 @@ from django.contrib.auth import login, authenticate, update_session_auth_hash, l
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test,permission_required
 from django.contrib import messages
+from django.core.mail import send_mail
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags

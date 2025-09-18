@@ -5,10 +5,10 @@
 <div class="content">
     <div class="page-title">
         <div>
-            <h2><i class="fas fa-user-graduate me-2"></i>Détails de l'Élève</h2>
+            <h2><i class="fas fa-user-graduate me-2"></i>Détails de l'Étudiant</h2>
             <ul class="breadcrumb">
                 <li><a href="{% url 'dashboard:dashboard' %}">Accueil</a></li>
-                <li>Élèves</li>
+                <li> <a href="{% url 'accounts:students_list' %}">Étudiants</a></li>
                 <li>Détails</li>
             </ul>
         </div>
@@ -195,7 +195,7 @@
                             <div class="info-item mb-3">
                                 <label class="fw-bold text-primary">Profil</label>
                                 <p class="mb-0">
-                                    <span >Élève</span>
+                                    <span >Étudiant</span>
                                 </p>
                             </div>
                         </div>
