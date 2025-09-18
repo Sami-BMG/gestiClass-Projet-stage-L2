@@ -697,24 +697,16 @@
                 });
             });
 
-            // Fonction pour basculer la sidebar
             function toggleSidebar() {
-                const sidebar = document.getElementById('sidebar');
-                const mainContent = document.querySelector('.main-content');
-                
-                // Bascule la classe 'collapsed' sur la sidebar
-                sidebar.classList.toggle('collapsed');
-                
-                // Ajuste la marge gauche du contenu principal
-                if (sidebar.classList.contains('collapsed')) {
-                    // Sidebar cachée/réduite : la marge devient petite (70px)
-                    mainContent.style.marginLeft = '70px'; 
-                } else {
-                    // Sidebar affichée : la marge redevient normale (250px)
-                    mainContent.style.marginLeft = 'var(--sidebar-width)'; // var(--sidebar-width) est 250px
-                }
-            }
-            
+                        const sidebar = document.getElementById('sidebar');
+                        const mainContent = document.getElementById('main-content');
+                        const header = document.getElementById('header');
+                        
+                        // Bascule la classe 'collapsed' sur tous les éléments
+                        sidebar.classList.toggle('collapsed');
+                        mainContent.classList.toggle('collapsed');
+                        header.classList.toggle('collapsed');
+                    }
         </script>
 
 

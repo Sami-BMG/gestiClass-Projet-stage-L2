@@ -44,7 +44,7 @@
         <div class="col-md-4 mb-4">
             <!-- Informations utilisateur -->
             <div class="card shadow">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header ">
                     <h6 class="m-0"><i class="fas fa-user me-1"></i>
                         Informations {% if user_type == 'student' %}Étudiant{% else %}Enseignant{% endif %}
                     </h6>
@@ -58,43 +58,34 @@
                         <p class="text-muted">{{ elem.email }}</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Rôle actuel -->
-            <div class="card shadow mt-3">
-                <div class="card-header bg-info text-white">
-                    <h6 class="m-0"><i class="fas fa-user-tag me-1"></i>Rôle(s) Actuel(s)</h6>
+                {% if elem.groups.all %}
+                {% for group in elem.groups.all %}
+                <div class="d-flex align-items-center justify-content-between mb-2 p-2 bg-light rounded">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                        <span class="fw-bold">{{ group.name }}</span>
+                    </div>
+                    <!-- Bouton pour ouvrir le modal de confirmation -->
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            data-bs-toggle="modal" data-bs-target="#confirmRemoveModal"
+                            data-role-id="{{ group.id }}" data-role-name="{{ group.name }}">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <div class="card-body">
-                    {% if elem.groups.all %}
-                        {% for group in elem.groups.all %}
-                        <div class="d-flex align-items-center justify-content-between mb-2 p-2 bg-light rounded">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-shield-alt text-primary me-2"></i>
-                                <span class="fw-bold">{{ group.name }}</span>
-                            </div>
-                            <!-- Bouton pour ouvrir le modal de confirmation -->
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    data-bs-toggle="modal" data-bs-target="#confirmRemoveModal"
-                                    data-role-id="{{ group.id }}" data-role-name="{{ group.name }}">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center text-muted py-3">
-                            <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
-                            <p>Aucun rôle attribué</p>
-                        </div>
-                    {% endif %}
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                    <p>Aucun rôle attribué</p>
                 </div>
+                {% endif %}
             </div>
         </div>
 
         <!-- Colonne de droite - Attribution de rôle -->
         <div class="col-md-8">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header ">
                     <h5 class="m-0"><i class="fas fa-shield-alt me-2"></i>Gestion des Rôles</h5>
                 </div>
                 <div class="card-body">

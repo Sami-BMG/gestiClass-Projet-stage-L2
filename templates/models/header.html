@@ -3,9 +3,9 @@
         <i class="fas fa-bars"></i>
     </div>
     <div class="header-right">
-        <div class="notification">
+        <div class="notification" onclick="window.location.href='{% url 'dashboard:suggestions_list' %}'">
             <i class="fas fa-bell"></i>
-            <span class="badge">{{ suggestions.count }} </span>
+            <span class="badge">{{ new_contacts_count }} </span>
         </div>
         <div>
             {% if user.is_authenticated %}

@@ -23,7 +23,7 @@
         <!-- Colonne de gauche - Photo et informations de base -->
         <div class="col-md-4 mb-4">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
+                <div class="card-header  text-center">
                     <h5 class="m-0">Photo de profil</h5>
                 </div>
                 <div class="card-body text-center">
@@ -49,12 +49,6 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Badge de statut admin -->
-                    {% if request.user.is_superuser %}
-                    <div class="mb-3">
-                        <span class="badge bg-danger">Administrateur</span>
-                    </div>
-                    {% endif %}
                     
                     <div class="d-grid gap-2">
                         <a href="mailto:{{ teacher.email }}" class="btn btn-outline-primary">
@@ -71,7 +65,7 @@
 
             <!-- Statuts et métriques -->
             <div class="card shadow mt-3">
-                <div class="card-header bg-info text-white">
+                <div class="card-header  ">
                     <h6 class="m-0"><i class="fas fa-chart-bar me-1"></i>Statistiques</h6>
                 </div>
                 <div class="card-body">
@@ -103,7 +97,7 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span>Profil:</span>
-                        <span class="badge bg-primary">{{ teacher.profil }}</span>
+                        <span >{{ teacher.profil }}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -148,7 +142,7 @@
                                 <label class="fw-bold text-primary">Téléphone</label>
                                 <p class="mb-0">
                                     {% if teacher.phone %}
-                                        <a href="tel:{{ teacher.phone }}" class="text-decoration-none">
+                                        <a href="tel:{{ teacher.phone }}" class=" text-decoration-none">
                                             {{ teacher.phone }}
                                         </a>
                                     {% else %}
@@ -203,7 +197,7 @@
                             <div class="info-item mb-3">
                                 <label class="fw-bold text-primary">Profil</label>
                                 <p class="mb-0">
-                                    <span class="badge bg-primary">Enseignant</span>
+                                    <span class="bmb-0">Enseignant</span>
                                 </p>
                             </div>
                         </div>
@@ -226,89 +220,11 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Section admin seulement -->
-            {% if request.user.is_superuser %}
-            <div class="card shadow mt-3">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="m-0"><i class="fas fa-shield-alt me-2"></i>Zone Administrateur</h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Cette section est visible uniquement par les administrateurs.
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-item mb-3">
-                                <label class="fw-bold text-warning">ID de l'utilisateur</label>
-                                <p class="mb-0">{{ teacher.id }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item mb-3">
-                                <label class="fw-bold text-warning">Dernière modification</label>
-                                <p class="mb-0">
-                                    {% if teacher.updated_at %}
-                                        {{ teacher.updated_at|date:"d/m/Y H:i" }}
-                                    {% else %}
-                                        <span class="text-muted">Non modifié</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="{% url 'accounts:update_teacher' teacher.id %}" class="btn btn-warning">
-                            <i class="fas fa-edit me-1"></i> Modifier l'enseignant
-                        </a>
-                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <i class="fas fa-trash me-1"></i> Supprimer l'enseignant
-                        </button>
-                        <a href="#" class="btn btn-outline-info">
-                            <i class="fas fa-key me-1"></i> Réinitialiser le mot de passe
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Modal de suppression (admin seulement) -->
-{% if request.user.is_superuser %}
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Confirmer la suppression</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir supprimer l'enseignant <strong>{{ teacher.get_full_name }}</strong> ?</p>
-                <p class="text-danger">
-                    <i class="fas fa-exclamation-triangle me-1"></i>
-                    Cette action est réservée aux administrateurs et est irréversible.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <form method="POST" action="{% url 'accounts:delete_teacher' teacher.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i> Supprimer définitivement
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-{% endblock %}
-
+{% endblock%}
 {% block extra_css %}
 <style>
 .info-item {

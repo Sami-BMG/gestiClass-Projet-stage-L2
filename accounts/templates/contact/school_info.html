@@ -13,7 +13,7 @@
         </div>
         <div class="btn-group">
             <a href="{% url 'accounts:contact' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+                <i class="fas fa-arrow-left me-1"></i> Retour 
             </a>
         </div>
     </div>
@@ -22,7 +22,7 @@
         <div class="col-md-8">
             {% if school_info %}
             <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header ">
                     <h5 class="m-0"><i class="fas fa-university me-2"></i>{{ school_info.name }}</h5>
                 </div>
                 <div class="card-body">
@@ -52,13 +52,13 @@
             </div>
 
             <div class="card shadow">
-                <div class="card-header bg-success text-white">
+                <div class="card-header ">
                     <h5 class="m-0"><i class="fas fa-clock me-2"></i>Horaires d'ouverture</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered">
-                            <thead class="table-light">
+                            <thead class="table-light ">
                                 <tr>
                                     <th>Jour</th>
                                     <th>Horaires</th>
@@ -100,7 +100,7 @@
 
         <div class="col-md-4">
             <div class="card shadow mb-4">
-                <div class="card-header bg-info text-white">
+                <div class="card-header ">
                     <h5 class="m-0"><i class="fas fa-map me-2"></i>Localisation</h5>
                 </div>
                 <div class="card-body text-center">
@@ -117,27 +117,8 @@
                 </div>
             </div>
 
-            <div class="card shadow mb-4">
-                <div class="card-header bg-warning text-white">
-                    <h5 class="m-0"><i class="fas fa-phone-alt me-2"></i>Contact rapide</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="tel:{{ school_info.phone|default:'+226XXXXXXXXX' }}" class="btn btn-outline-primary">
-                            <i class="fas fa-phone me-1"></i> Appeler
-                        </a>
-                        <a href="mailto:{{ school_info.email|default:'contact@ecole.ma' }}" class="btn btn-outline-success">
-                            <i class="fas fa-envelope me-1"></i> Envoyer un email
-                        </a>
-                        <a href="{% url 'accounts:contact' %}" class="btn btn-outline-info">
-                            <i class="fas fa-form me-1"></i> Formulaire de contact
-                        </a>
-                    </div>
-                </div>
-            </div>
-
             <div class="card shadow">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header ">
                     <h5 class="m-0"><i class="fas fa-link me-2"></i>Liens utiles</h5>
                 </div>
                 <div class="card-body">

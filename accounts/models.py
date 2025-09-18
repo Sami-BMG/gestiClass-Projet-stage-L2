@@ -336,31 +336,48 @@ class ContactMessage(models.Model):
     
     def __str__(self):
         return f"{self.subject} - {self.get_message_type_display()}"
-
 class FAQ(models.Model):
-    CATEGORY_CHOICES = [
-        ('general', 'Général'),
-        ('technical', 'Technique'),
-        ('academic', 'Académique'),
-        ('administration', 'Administration'),
-        ('other', 'Autre'),
-    ]
+    CATEGORY_CHOICES = (
+        ('compte', 'Compte et Connexion'),
+        ('notes', 'Notes et Résultats'),
+        ('cours', 'Cours et Emploi du temps'),
+        ('autres', 'Autres questions'),
+    )
     
-    question = models.CharField(max_length=255, verbose_name="Question")
-    answer = models.TextField(verbose_name="Réponse")
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, verbose_name="Catégorie")
-    is_active = models.BooleanField(default=True, verbose_name="Active")
-    order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    order = models.PositiveIntegerField(default=0, help_text="Ordre d'affichage")
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['order', 'category', 'question']
-        verbose_name = "FAQ"
-        verbose_name_plural = "FAQ"
+        ordering = ['category', 'order', 'question']
+        verbose_name = 'FAQ'
+        verbose_name_plural = 'FAQs'
     
     def __str__(self):
         return self.question
+
+class Question(models.Model):
+    CATEGORY_CHOICES = FAQ.CATEGORY_CHOICES
+    
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    email = models.EmailField()
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    question = models.TextField()
+    is_answered = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Question utilisateur'
+        verbose_name_plural = 'Questions utilisateurs'
+    
+    def __str__(self):
+        return f"Question de {self.email}: {self.question[:50]}..."
+
 
 class SchoolInfo(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nom de l'école")

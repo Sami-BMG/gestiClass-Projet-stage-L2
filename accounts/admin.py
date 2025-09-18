@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo
+from .models import User, Student, Teacher, Module, Result, Timetable, InfoMessage, ContactMessage, FAQ, SchoolInfo, Question
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 class CustomUserAdmin(UserAdmin):
@@ -73,6 +73,24 @@ class InfoMessageAdmin(admin.ModelAdmin):
     search_fields = ('title', 'content')
 
 
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ['question', 'category', 'order', 'is_active']
+    list_filter = ['category', 'is_active']
+    search_fields = ['question', 'answer']
+    list_editable = ['order', 'is_active']
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ['email', 'category', 'question_short', 'is_answered', 'created_at']
+    list_filter = ['category', 'is_answered', 'created_at']
+    search_fields = ['question', 'email']
+    list_editable = ['is_answered']
+    
+    def question_short(self, obj):
+        return obj.question[:50] + '...' if len(obj.question) > 50 else obj.question
+    question_short.short_description = 'Question'
+
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
@@ -80,23 +98,20 @@ class ContactMessageAdmin(admin.ModelAdmin):
     list_filter = ('message_type', 'status', 'created_at')
     search_fields = ('name', 'email', 'subject')
 
-@admin.register(FAQ)
-class FAQAdmin(admin.ModelAdmin):
-    list_display = ('question', 'category', 'is_active', 'order')
-    list_filter = ('category', 'is_active')
-    search_fields = ('question', 'answer')
 
 @admin.register(SchoolInfo)
 class SchoolInfoAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'phone', 'is_active')
     list_filter = ('is_active',)
 
-models_to_unregister = [Student, Teacher, Timetable,Module,Result,Timetable, TimetableAdmin,InfoMessage,ContactMessage,FAQ,SchoolInfo]
+models_to_unregister = [Student, Teacher, Timetable,Module,Result,Timetable, TimetableAdmin,InfoMessage,ContactMessage,FAQ,SchoolInfo, Question]
 for model in models_to_unregister:
     if admin.site.is_registered(model):
         admin.site.unregister(model)
+        
+        
 
-# ENREGISTRER tous les modèles avec leurs classes Admin respectives
+
 admin.site.register(User)
 admin.site.register(Student, StudentAdmin)
 admin.site.register(Teacher, TeacherAdmin)
@@ -105,7 +120,8 @@ admin.site.register(Result)
 admin.site.register(Timetable, TimetableAdmin)
 admin.site.register(InfoMessage)
 admin.site.register(ContactMessage)
-admin.site.register(FAQ)
+admin.site.register(Question, QuestionAdmin)        
+admin.site.register(FAQ, FAQAdmin)
 admin.site.register(SchoolInfo)
 
 

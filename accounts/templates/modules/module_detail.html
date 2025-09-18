@@ -23,12 +23,12 @@
         <!-- Colonne de gauche - Informations de base -->
         <div class="col-md-4 mb-4">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
+                <div class="card-header text-center">
                     <h5 class="m-0">Identifiant du Module</h5>
                 </div>
                 <div class="card-body text-center">
                     
-                    <h4 >{{ module.name }}</h4>
+                    <h4 class="text-primary">{{ module.name }}</h4>
                     <p class="text-muted">{{ module.code }}</p>
                     
                     <!-- Badge de coefficient -->
@@ -48,7 +48,7 @@
              <!-- Enseignant responsable -->
              {% if module.teacher %}
              <div class="card shadow mt-3">
-                 <div class="card-header bg-secondary text-white">
+                 <div class="card-header text-center">
                      <h6 class="m-0"><i class="fas fa-user-tie me-1"></i>Enseignant Responsable</h6>
                  </div>
                  <div class="card-body text-center">
@@ -85,13 +85,13 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold ">Code du module</label>
+                                <label class="fw-bold text-primary ">Code du module</label>
                                 <p class="mb-0">{{ module.code }}</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold ">Nom complet</label>
+                                <label class="fw-bold text-primary">Nom complet</label>
                                 <p>{{ module.name }}</p>
                             </div>
                         </div>
@@ -100,7 +100,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold ">Coefficient</label>
+                                <label class="fw-bold text-primary">Coefficient</label>
                                 <p class="mb-0">
                                     <span >{{ module.coefficient }}</span>
                                 </p>
@@ -108,12 +108,12 @@
                         </div>
                         <div class="col-md-6">
                             <div class="info-item mb-3">
-                                <label class="fw-bold ">Enseignant responsable</label>
+                                <label class="fw-bold text-primary">Enseignant responsable</label>
                                 <p class="mb-0">
                                     {% if module.teacher %}
-                                        <strong class="text-muted ms-2">
+                                        <span >
                                             {{ module.teacher.get_full_name }}
-                                        </strong>
+                                        </span>
                                     {% else %}
                                         <span class="text-muted">Non assigné</span>
                                     {% endif %}
@@ -126,7 +126,7 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="info-item mb-3">
-                                <label class="fw-bold ">Volume Horaire</label>
+                                <label class="fw-bold text-primary">Volume Horaire</label>
                                 <div class="row mt-2">
                                     <div class="col-md-4">
                                         <div class="d-flex align-items-center mb-2">
@@ -165,7 +165,7 @@
                     </div>
 
                     <div class="info-item mb-3">
-                        <label class="fw-bold ">Description</label>
+                        <label class="fw-bold text-primary">Description</label>
                         <p class="mb-0">
                             {% if module.description %}
                                 {{ module.description|linebreaks }}

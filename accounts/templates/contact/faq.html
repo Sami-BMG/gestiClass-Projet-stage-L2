@@ -13,22 +13,40 @@
         </div>
         <div class="btn-group">
             <a href="{% url 'accounts:contact' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+                <i class="fas fa-arrow-left me-1"></i> Retour 
             </a>
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-8">
+            <!-- Recherche -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <form method="get" action="{% url 'accounts:faq_list' %}">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   placeholder="Rechercher dans les questions..." 
+                                   value="{{ search_query }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- FAQ par catégories -->
             {% for category, faqs in faqs_by_category.items %}
             <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="m-0">{{ faqs.0.get_category_display }}</h5>
+                    <span class="badge bg-light text-primary">{{ faqs|length }} questions</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="accordion" id="accordion{{ forloop.counter }}">
                         {% for faq in faqs %}
-                        <div class="accordion-item">
+                        <div class="accordion-item border-0">
                             <h2 class="accordion-header" id="heading{{ faq.id }}">
                                 <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" 
                                         type="button" data-bs-toggle="collapse" 
@@ -53,7 +71,7 @@
             </div>
             {% empty %}
             <div class="card shadow">
-                <div class="card-body text-center">
+                <div class="card-body text-center py-5">
                     <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
                     <h5>Aucune FAQ disponible pour le moment</h5>
                     <p class="text-muted">Revenez plus tard ou contactez-nous directement.</p>
@@ -63,8 +81,9 @@
         </div>
 
         <div class="col-md-4">
+            <!-- Cartes d'information -->
             <div class="card shadow mb-4">
-                <div class="card-header bg-info text-white">
+                <div class="card-header">
                     <h5 class="m-0"><i class="fas fa-lightbulb me-2"></i>Vous ne trouvez pas réponse ?</h5>
                 </div>
                 <div class="card-body">
@@ -76,21 +95,19 @@
                     </div>
                 </div>
             </div>
-
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h5 class="m-0"><i class="fas fa-school me-2"></i>Informations</h5>
-                </div>
-                <div class="card-body">
-                    <p>Besoin d'informations générales sur l'école ?</p>
-                    <div class="d-grid">
-                        <a href="{% url 'accounts:school_info' %}" class="btn btn-outline-success">
-                            <i class="fas fa-info-circle me-1"></i> Infos de l'école
-                        </a>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
+
+<style>
+    .question-form {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+    
+    .question-form .form-label {
+        font-weight: 500;
+    }
+</style>
 {% endblock %}

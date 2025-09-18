@@ -17,11 +17,13 @@ import csv
 from io import StringIO
 import secrets
 import string
-from .forms import CustomUserCreationForm,AssignRoleForm,RoleForm
+from .forms import CustomUserCreationForm,AssignRoleForm, QuestionForm,RoleForm
 from .models import Result, Module, User, ContactMessage, FAQ, SchoolInfo,Teacher ,Student
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User, Group, Permission 
 from django import forms
+
+from accounts import models
 
 
 
@@ -1268,7 +1270,7 @@ def suggestions_list(request):
         'selected_status': status,
         'title': 'Suggestions et Problèmes'
     }
-    return render(request, 'contact/suggestions_list.html', context)
+    return render(request, 'suggestions/suggestions.html', context)
 
 
 @login_required
@@ -1322,25 +1324,78 @@ def update_suggestion_status(request, message_id):
         except Exception as e:
             messages.error(request, f"Erreur lors de la mise à jour: {str(e)}")
     
-    return redirect('contact/suggestion_detail', message_id=message_id)
+    return redirect('suggestions/suggestion.html', message_id=message_id)
 
 
 def faq_list(request):
-    """Vue pour afficher la FAQ"""
-    faqs = FAQ.objects.filter(is_active=True).order_by('order', 'category', 'question')
-    
-    # Grouper par catégorie
+    # Récupérer toutes les FAQs groupées par catégorie
+    faqs = FAQ.objects.filter(is_active=True).order_by('category', 'order')
     faqs_by_category = {}
+    
     for faq in faqs:
         if faq.category not in faqs_by_category:
             faqs_by_category[faq.category] = []
         faqs_by_category[faq.category].append(faq)
     
+    # Gestion du formulaire de question
+    if request.method == 'POST':
+        form = QuestionForm(request.POST)
+        if form.is_valid():
+            question = form.save(commit=False)
+            
+            # Si l'utilisateur est connecté, l'associer à la question
+            if request.user.is_authenticated:
+                question.user = request.user
+                question.email = request.user.email  # Pré-remplir avec l'email de l'utilisateur
+            
+            question.save()
+            
+            # Envoyer un email de notification (optionnel)
+            send_question_notification(question)
+            
+            messages.success(request, 'Votre question a été envoyée avec succès! Nous y répondrons bientôt.')
+            return redirect('accounts:faq')
+    else:
+        # Pré-remplir le formulaire si l'utilisateur est connecté
+        initial = {}
+        if request.user.is_authenticated:
+            initial['email'] = request.user.email
+        
+        form = QuestionForm(initial=initial)
+    
+    # Recherche
+    search_query = request.GET.get('search', '')
+    if search_query:
+        filtered_faqs = {}
+        for category, faq_list in faqs_by_category.items():
+            filtered_faqs[category] = [
+                faq for faq in faq_list 
+                if search_query.lower() in faq.question.lower() or 
+                   search_query.lower() in faq.answer.lower()
+            ]
+        # Ne garder que les catégories qui ont des résultats
+        faqs_by_category = {k: v for k, v in filtered_faqs.items() if v}
+    
     context = {
         'faqs_by_category': faqs_by_category,
-        'title': 'Foire Aux Questions (FAQ)'
+        'form': form,
+        'search_query': search_query,
     }
+    
     return render(request, 'contact/faq.html', context)
+
+def send_question_notification(question):
+    """
+    Envoie une notification par email lorsqu'une nouvelle question est posée
+    (À implémenter selon les besoins)
+    """
+    # Exemple d'implémentation:
+    # from django.core.mail import send_mail
+    # subject = f'Nouvelle question FAQ: {question.category}'
+    # message = f'Une nouvelle question a été posée:\n\n{question.question}\n\nPar: {question.email}'
+    # send_mail(subject, message, 'noreply@gesticlass.com', ['admin@gesticlass.com'])
+    pass
+
 
 
 def school_info(request):

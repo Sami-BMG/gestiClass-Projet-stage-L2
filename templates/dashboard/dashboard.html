@@ -7,7 +7,7 @@
         <div class="row justify-content-center">
             <div class="col-md-6 text-center">
                 <h1>Bonjour {{ user.first_name }} !</h1>
-                <h3>Bienvenue sur votre espace !</h3>
+                <h4>Bienvenue sur votre espace !</h4>
             </div>
         </div>
     </div>
@@ -41,7 +41,7 @@
             </div>
         </div>
         {% if perms.accounts.can_view_suggestions_list %}
-        <div class="card stat-card clickable-card" onclick="window.location.href='{% url 'dashboard:suggestions_list' %}'">
+        <div class="card stat-card clickable-card">
             <div class="stat-icon" style="background-color: #E91E63;">
                 <i class="fas fa-lightbulb"></i>
             </div>
