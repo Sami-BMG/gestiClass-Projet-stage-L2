@@ -1,40 +1,52 @@
 <div class="sidebar" id="sidebar">
-    
     <div class="sidebar-header">
         <h2><i class="fas fa-graduation-cap text-white"></i> GestiClass</h2>
     </div>
     <div class="sidebar-menu">
         <ul>
-            <li><a href="{% url 'dashboard:dashboard' %}" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="{% url 'dashboard:dashboard' %}" class="active">
+                <i class="fas fa-home"></i> <span>Dashboard</span>
+            </a></li>
 
-            <li><a href="{% url 'accounts:students_list' %}"><i class="fas fa-user-graduate"></i> Étudiants</a></li>
+            <li><a href="{% url 'accounts:students_list' %}">
+                <i class="fas fa-user-graduate"></i> <span>Étudiants</span>
+            </a></li>
             
             {% if perms.accounts.peut_acceder_aux_enseignants %}
-            <li><a href="{% url 'accounts:teachers_list' %}" ><i class="fas fa-chalkboard-teacher"></i> Enseignants</a></li>
+            <li><a href="{% url 'accounts:teachers_list' %}" >
+                <i class="fas fa-chalkboard-teacher"></i> <span>Enseignants</span>
+            </a></li>
             {% endif %}
             
             {% if perms.accounts.peut_acceder_module %}
-            <li><a href="{% url 'accounts:modules_list' %}"><i class="fas fa-book"></i> Modules</a></li>
+            <li><a href="{% url 'accounts:modules_list' %}">
+                <i class="fas fa-book"></i> <span>Modules</span>
+            </a></li>
             {% endif %}
 
-            <li><a href="{% url 'accounts:results_list' %}"><i class="fas fa-chart-bar"></i> Résulats</a></li>
+            <li><a href="{% url 'accounts:results_list' %}">
+                <i class="fas fa-chart-bar"></i> <span>Résulats</span>
+            </a></li>
+            
             {% if perms.accounts.peut_acceder_aux_roles %}
-            <li><a href="{% url 'accounts:role_list' %}"><i class="fas fa-user-shield"></i> Rôles et Permissions</a></li>
+            <li><a href="{% url 'accounts:role_list' %}">
+                <i class="fas fa-user-shield"></i> <span>Rôles et Permissions</span>
+            </a></li>
             {% endif %}
 
-            <li><a href="{% url 'accounts:contact' %}"><i class="fas fa-address-book"></i> Contacts</a></li>
+            <li><a href="{% url 'accounts:contact' %}">
+                <i class="fas fa-address-book"></i> <span>Contacts</span>
+            </a></li>
         </ul>
     </div>  
 
-    <div class="user-profile d-flex align-items-center p-3 rounded ">
+    <div class="user-profile d-flex align-items-center p-3 rounded">
         {% if user.photo %}
-            <!-- Photo réelle -->
             <img src="{{ user.photo.url }}" 
                  alt="Photo de {{ user.get_full_name }}" 
                  class="rounded-circle me-3"
                  style="width: 45px; height: 45px; object-fit: cover;">
         {% else %}
-            <!-- Avatar avec initiales -->
             <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=0D8ABC&color=fff&size=128" 
                  alt="Avatar de {{ user.get_full_name }}"
                  class="rounded-circle me-3"
@@ -42,14 +54,14 @@
         {% endif %}
     
         <div class="user-info">
-            <h6 class="mb-0  ">{{ user.get_full_name }}</h6>
+            <h6 class="mb-0">{{ user.get_full_name }}</h6>
             <small>
                 {% if user.profil == 'student' %}
                     <span class="badge rounded-pill">Élève</span>
                 {% elif user.profil == 'teacher' %}
-                    <span class="badge rounded-pill" >Professeur</span>
+                    <span class="badge rounded-pill">Professeur</span>
                 {% elif user.profil == 'admin' %}
-                    <span class="badge rounded-pill" >Admin</span>
+                    <span class="badge rounded-pill">Admin</span>
                 {% endif %}
             </small>
         </div>
@@ -60,9 +72,4 @@
             </a>
         </div>
     </div>
-    
-    
-    
-    
-    
 </div>

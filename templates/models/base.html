@@ -3,17 +3,16 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title> GestiClass</title>
+        <title>GestiClass</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <!-- Dans votre base.html -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <style>
+            /* VOTRE STYLE EXISTANT (inchangé) */
             :root {
                 --primary: #4361ee;
                 --secondary: #3f37c9;
@@ -378,6 +377,45 @@
                 object-fit: cover;
             }
 
+            /* AJOUTS POUR LA RESPONSIVITÉ (sans changer votre style) */
+            .sidebar.collapsed {
+                width: 70px;
+            }
+            
+            .sidebar.collapsed .sidebar-header h2,
+            .sidebar.collapsed .user-info,
+            .sidebar.collapsed .sidebar-menu span {
+                display: none;
+            }
+            
+            .sidebar.collapsed .sidebar-menu a {
+                padding: 12px 15px;
+                justify-content: center;
+            }
+            
+            .sidebar.collapsed .sidebar-menu i {
+                margin-right: 0;
+                font-size: 1.4rem;
+            }
+            
+            .sidebar.collapsed .user-profile {
+                flex-direction: column;
+                padding: 10px 5px;
+            }
+            
+            .sidebar.collapsed .user-profile img {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .main-content.collapsed {
+                margin-left: 70px;
+            }
+            
+            .header.collapsed .toggle-sidebar {
+                margin-left: 70px;
+            }
+
             /* Responsive */
             @media (max-width: 992px) {
                 .sidebar {
@@ -390,10 +428,6 @@
                 
                 .main-content {
                     margin-left: 0;
-                }
-                
-                .sidebar.active + .main-content {
-                    margin-left: var(--sidebar-width);
                 }
                 
                 .charts {
@@ -521,62 +555,17 @@
                 border-radius: 8px;
                 background-color: #f8f9fa;
             }
-
-            /* Sidebar */
-            .sidebar {
-                width: var(--sidebar-width); /* 250px */
-                transition: var(--transition);
-                /* ... le reste de ton CSS de sidebar ... */
-            }
-            
-            .sidebar.collapsed {
-                width: 70px; /* Taille réduite */
-            }
-            
-            .sidebar.collapsed .sidebar-header h3,
-            .sidebar.collapsed .user-profile img,
-            .sidebar.collapsed .user-info {
-                /* Cacher les éléments volumineux en mode réduit */
-                display: none;
-            }
-            
-            /* S'assurer que le texte des liens est masqué */
-            .sidebar.collapsed .sidebar-menu ul li a span {
-                display: none;
-            }
-            
-            .sidebar.collapsed .sidebar-menu i {
-                margin-right: 0; /* Centrer l'icône quand le texte disparaît */
-            }
-
-            /* Main Content */
-                .main-content {
-                    flex: 1;
-                    /* La marge de base doit être celle de la sidebar normale (250px) */
-                    margin-left: var(--sidebar-width); 
-                    transition: var(--transition);
-                }
-
-                /* Ajout: Règle pour l'état "collapsed" */
-                .sidebar.collapsed ~ .main-content {
-                    /* Marge réduite à la largeur de la sidebar réduite (70px) */
-                    margin-left: 70px;
-                }
-
         </style>
     </head>
         
     <body>
-
-
-        <!-- Main Application (hidden by default) -->
-        <div class="" >
+        <!-- Main Application -->
+        <div>
             <!-- Sidebar -->
-            
             {% include 'models/sidebar.html' %}
             
             <!-- Main Content -->
-            <div class="main-content">
+            <div class="main-content" id="main-content">
                 <!-- Header -->
                 {% include 'models/header.html' %}
                                         
@@ -595,8 +584,7 @@
                 {% block content %}{% endblock %}
             </div>
 
-            
-                    <!-- Modal de confirmation de déconnexion -->
+            <!-- Modal de confirmation de déconnexion -->
             <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -614,15 +602,8 @@
                 </div>
                 </div>
             </div>
-
-
-
-
-
         </div>
 
-            <!-- Chart.js -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <!-- jQuery (nécessaire pour Bootstrap) -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <!-- Bootstrap JS -->
@@ -631,8 +612,7 @@
 
         <script>
             // Fonction améliorée pour définir l'élément de menu actif
-            function setActiveMenu() 
-            {
+            function setActiveMenu() {
                 // Récupérer le chemin de l'URL actuelle
                 const currentPath = window.location.pathname;
                 
@@ -675,43 +655,59 @@
             // Écouter les événements de navigation (pour le bouton retour du navigateur)
             window.addEventListener('popstate', setActiveMenu);
 
-                    // Script pour gérer la confirmation de déconnexion
+            // Script pour gérer la confirmation de déconnexion
             document.addEventListener('DOMContentLoaded', function() {
                 // Récupérer le lien de déconnexion
                 const logoutLink = document.querySelector('a[href="{% url 'accounts:logout' %}"]');
                 
                 if (logoutLink) {
-                // Empêcher le comportement par défaut du lien
-                logoutLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Afficher le modal de confirmation
-                    const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
-                    logoutModal.show();
-                });
+                    // Empêcher le comportement par défaut du lien
+                    logoutLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Afficher le modal de confirmation
+                        const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
+                        logoutModal.show();
+                    });
                 }
-                
-                // Optionnel: Ajouter un événement de confirmation si l'utilisateur quitte la page
-                window.addEventListener('beforeunload', function(e) {
-                // Cette fonction peut être utilisée pour d'autres confirmations de navigation
-                });
             });
 
+            // Fonction pour basculer la sidebar
             function toggleSidebar() {
-                        const sidebar = document.getElementById('sidebar');
-                        const mainContent = document.getElementById('main-content');
-                        const header = document.getElementById('header');
-                        
-                        // Bascule la classe 'collapsed' sur tous les éléments
-                        sidebar.classList.toggle('collapsed');
-                        mainContent.classList.toggle('collapsed');
-                        header.classList.toggle('collapsed');
-                    }
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('main-content');
+                const header = document.querySelector('.header');
+                
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('collapsed');
+                
+                if (header) {
+                    header.classList.toggle('collapsed');
+                }
+            }
+
+            // Fonction pour gérer la responsivité sur mobile
+            function handleMobileSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('main-content');
+                
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.remove('active');
+                    mainContent.classList.remove('collapsed');
+                }
+            }
+
+            // Écouter le redimensionnement de la fenêtre
+            window.addEventListener('resize', handleMobileSidebar);
+            
+            // Initialiser au chargement
+            document.addEventListener('DOMContentLoaded', function() {
+                handleMobileSidebar();
+                setActiveMenu();
+            });
         </script>
 
-
         {% block extra_js %}
-
-    {% endblock %}
+        {% endblock %}
     </body>
 </html>

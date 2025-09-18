@@ -12,13 +12,13 @@
                 <li>Ajouter des notes</li>
             </ul>
         </div>
-        <a href="{% url 'accounts:modules_list' %}" class="btn btn-outline-primary  text-white">
+        <a href="{% url 'accounts:modules_list' %}" class="btn btn-outline-primary text-white">
             <i class="fas fa-arrow-left me-1 text-white"></i> Retour aux modules
         </a>
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-header " >
+        <div class="card-header">
             <h5 class="m-0">
                 <i class="fas fa-book me-2"></i>{{ module.code }} - {{ module.name }}
             </h5>
@@ -26,23 +26,53 @@
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
+                
+                <!-- Section pour la date commune du devoir -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-calendar-alt me-2"></i>Date du devoir</h6>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                    <input type="date" 
+                                           name="common_exam_date" 
+                                           class="form-control" 
+                                           value="{% now 'Y-m-d' %}"
+                                           required>
+                                </div>
+                                <small class="form-text text-muted">Cette date s'appliquera à tous les étudiants.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                         <thead style="background-color: #f8f9fc;">
                             <tr>
-                                <th style="border-top: none;">Étudiant</th>
-                                <th style="border-top: none;">Note (/20)</th>
-                                <th style="border-top: none;">Date d'examen</th>
-                                <th style="border-top: none;">Commentaires</th>
+                                <th style="width: 30%;">Étudiant</th>
+                                <th style="width: 20%;">Note (/20)</th>
+                                <th style="width: 30%;">Commentaires</th>
+                                <th style="width: 20%;">Statut</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for student in students %}
                             <tr>
                                 <td>
-                                    <strong>{{ student.get_full_name }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ student.email }}</small>
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol symbol-circle symbol-40 me-3">
+                                            <div class="symbol-label fs-2 fw-bold text-primary bg-light-primary">
+                                                {{ student.get_full_name|first|upper }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>{{ student.get_full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ student.email }}</small>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     <input type="number" 
@@ -51,23 +81,33 @@
                                            min="0" 
                                            max="20" 
                                            step="0.01"
-                                           value="{% if existing_results.student.id %}{{ existing_results.student.id.score }}{% endif %}">
-                                </td>
-                                <td>
-                                    <input type="date" 
-                                           name="exam_date_{{ student.id }}" 
-                                           class="form-control"
-                                           value="{% if existing_results.student.id %}{{ existing_results.student.id.exam_date|date:'Y-m-d' %}{% else %}{% now 'Y-m-d' %}{% endif %}">
+                                           placeholder="0.00"
+                                           value="{% for result in existing_results %}{% if result.student.id == student.id %}{{ result.score }}{% endif %}{% endfor %}">
                                 </td>
                                 <td>
                                     <textarea name="comments_{{ student.id }}" 
                                               class="form-control" 
-                                              rows="2">{% if existing_results.student.id %}{{ existing_results.student.id.comments }}{% endif %}</textarea>
+                                              rows="2"
+                                              placeholder="Commentaires optionnels">{% for result in existing_results %}{% if result.student.id == student.id %}{{ result.comments }}{% endif %}{% endfor %}</textarea>
+                                </td>
+                                <td class="text-center">
+                                    {% for result in existing_results %}
+                                        {% if result.student.id == student.id %}
+                                            <span class="badge bg-success">Déjà noté</span>
+                                            <br>
+                                            <small class="text-muted">le {{ result.exam_date|date:"d/m/Y" }}</small>
+                                        {% endif %}
+                                    {% empty %}
+                                        <span class="badge bg-secondary">Non noté</span>
+                                    {% endfor %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center py-4">Aucun étudiant trouvé</td>
+                                <td colspan="4" class="text-center py-4">
+                                    <i class="fas fa-user-slash fa-2x text-muted mb-2"></i>
+                                    <p>Aucun étudiant trouvé pour ce module</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -112,5 +152,75 @@
         background-color: #4e73df;
         color: white;
     }
+    .symbol {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .symbol-40 {
+        width: 40px;
+        height: 40px;
+    }
+    .symbol-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Focus sur le premier champ de note vide
+        const firstEmptyScore = document.querySelector('input[type="number"][value=""]');
+        if (firstEmptyScore) {
+            firstEmptyScore.focus();
+        }
+        
+        // Validation des notes
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+            const scoreInputs = document.querySelectorAll('input[type="number"]');
+            
+            scoreInputs.forEach(input => {
+                if (input.value) {
+                    const score = parseFloat(input.value);
+                    if (score < 0 || score > 20) {
+                        input.style.borderColor = 'red';
+                        hasError = true;
+                        
+                        // Créer un message d'erreur
+                        if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('error-message')) {
+                            const errorMsg = document.createElement('div');
+                            errorMsg.className = 'error-message text-danger small mt-1';
+                            errorMsg.textContent = 'La note doit être entre 0 et 20';
+                            input.parentNode.appendChild(errorMsg);
+                        }
+                    } else {
+                        input.style.borderColor = '';
+                        const errorMsg = input.parentNode.querySelector('.error-message');
+                        if (errorMsg) {
+                            errorMsg.remove();
+                        }
+                    }
+                }
+            });
+            
+            if (hasError) {
+                e.preventDefault();
+                alert('Veuillez corriger les erreurs. Les notes doivent être entre 0 et 20.');
+            }
+        });
+    });
+</script>
 {% endblock %}
