@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-6((5w!&@t%t*9r$f#k8!pjs$_=l#)j1qq)#s1eo2ocr14i53h(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['SamiBMG1.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -135,5 +135,3 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_ROOT = BASE_DIR / 'media'
 
-print("Templates DIRS:", [os.path.abspath(d) for d in TEMPLATES[0]['DIRS']])
-print("Template exists:", os.path.exists(os.path.join(BASE_DIR, 'templates', 'inscription', 'connexion.html')))
