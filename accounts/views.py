@@ -39,7 +39,7 @@ def send_login_email(user, password):
         'last_name': user.last_name,
         'username': user.username,
         'password': password,
-        'login_url': 'http://127.0.0.1:8000/login'
+        'login_url': 'https://samibmg1.pythonanywhere.com/accounts/login/'
     }
     
     html_message = render_to_string('email/welcome_email.html', context)
