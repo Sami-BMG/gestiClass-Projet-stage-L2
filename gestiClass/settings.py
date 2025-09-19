@@ -17,6 +17,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['SamiBMG1.pythonanywhere.com', 'localhost', '127.0.0.1']
 
+DOMAIN = 'samibmg1.pythonanywhere.com'
+SITE_NAME = 'GestiClass'
 
 # Application definition
 
@@ -120,6 +122,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'samiratoubamogo6@gmail.com'
 EMAIL_HOST_PASSWORD = 'vshewvzauhhyazee'  
+DEFAULT_FROM_EMAIL = 'samiratoubamogo6@gmail.com'
 
 LOGIN_REDIRECT_URL = 'dashboard:home'  # Redirection après connexion
 LOGOUT_REDIRECT_URL = 'accounts:login'  # Redirection après déconnexion
